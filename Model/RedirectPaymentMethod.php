@@ -106,7 +106,6 @@ class RedirectPaymentMethod extends PayU
     protected $transactionRepository;
 
     protected $orderFactory;
-    protected $storeManager;
     protected $quoteRepository;
     protected $orderSender;
     protected $_invoiceService;
@@ -135,7 +134,6 @@ class RedirectPaymentMethod extends PayU
         \PayU\EasyPlus\Model\Request\Factory $requestFactory,
         \PayU\EasyPlus\Model\Response\Factory $responseFactory,
         \Magento\Sales\Model\OrderFactory $orderFactory,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
         array $data = array()
@@ -165,7 +163,6 @@ class RedirectPaymentMethod extends PayU
         $this->_session = $session;
         $this->_paymentData = $paymentData;
         $this->orderFactory = $orderFactory;
-        $this->storeManager = $storeManager;
         $this->quoteRepository = $quoteRepository;
         $this->orderSender = $orderSender;
 
