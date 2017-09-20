@@ -1,6 +1,6 @@
 {
     "name": "onahkenneth/module-payu-mea-magento2",
-    "description": "Secure payment processing via PayU MEA for MAgento 2",
+    "description": "Secure payment processing via PayU MEA for Magento 2",
     "keywords": [
         "payu",
         "payu easy and plus merchant",
@@ -9,7 +9,7 @@
         "payu magento 2"
     ],
     "type": "magento2-module",
-    "version": "1.0.0",
+    "version": "0.0.3",
     "homepage": "https://payu.co.za/",
     "license": [
         "OSL-3.0",
