@@ -78,7 +78,7 @@ class RedirectPaymentMethod extends PayU
      * @var bool
      */
     protected $_canFetchTransactionInfo = true;
-    
+
     protected $_easyPlusApi                 = false;
     protected $_dataFactory                 = false;
     protected $_requestFactory              = false;
@@ -196,7 +196,7 @@ class RedirectPaymentMethod extends PayU
             $store = $this->_storeManager->getStore()->getId();
             $this->setData('store', $store);
         }
-        
+
         return $this;
     }
 
@@ -383,7 +383,7 @@ class RedirectPaymentMethod extends PayU
         $order->setState($state);
         $order->setCanSendNewEmailFlag(true);
 
-        //$payment->setSkipOrderProcessing(true);
+        $payment->setSkipOrderProcessing(true);
 
         return $this;
     }
@@ -403,13 +403,10 @@ class RedirectPaymentMethod extends PayU
         /** @var \Magento\Sales\Model\Order $order */
         $order = $payment->getOrder();
         $order->setCanSendNewEmailFlag(false);
-        $payment->setBaseAmountOrdered($order->getBaseTotalDue());
-        $payment->setAmountOrdered($order->getTotalDue());
+        //$payment->setBaseAmountOrdered($order->getBaseTotalDue());
+        //$payment->setAmountOrdered($order->getTotalDue());
 
         $helper = $this->_dataFactory->create('frontend');
-
-        /** @var \Magento\Sales\Model\Order $order */
-        //$order = $payment->getOrder();
 
         try {
 
@@ -539,7 +536,7 @@ class RedirectPaymentMethod extends PayU
         $payment->getMethodInstance()->setResponseData($response->getReturn());
         $this->processPaymentFraudStatus($payment);
         $this->addStatusCommentOnUpdate($payment, $response);
-        $payment->place();
+        //$payment->place();
         //$order->save();
         //match amounts. should be equals for authorization.
         //decline the order if amount does not match.
@@ -553,13 +550,15 @@ class RedirectPaymentMethod extends PayU
         }
 
         try {
-
+            $order->setCanSendNewEmailFlag(true);
             $this->orderSender->send($order);
 
-            $invoice = $this->_invoiceService->prepareInvoice($order);
-            $invoice->setTransactionId($response->getTranxId());
-            $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
-            $invoice->register();
+            if($order->canInvoice()) {
+                $invoice = $this->_invoiceService->prepareInvoice($order);
+                //$invoice->setTransactionId($response->getTranxId());
+                $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                $invoice->register();
+            }
 
             $quote = $this->quoteRepository->get($order->getQuoteId())->setIsActive(false);
             $this->quoteRepository->save($quote);

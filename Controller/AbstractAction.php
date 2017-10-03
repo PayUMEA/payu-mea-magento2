@@ -91,7 +91,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
     /**
      * @var \PayU\EasyPlus\Model\Response
      */
-    protected $_response;
+    protected $response;
 
     /**
      * @param \Magento\Framework\App\Action\Context $context
@@ -134,7 +134,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
 
         $this->_api = $apiFactory->create();
         $this->_config = $this->_objectManager->create($this->_configType, $parameters);
-        $this->_response = $responseFactory->create();
+        $this->response = $responseFactory->create();
     }
 
     /**
@@ -217,7 +217,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
     protected function _getQuote()
     {
         if (!$this->_quote) {
-            $this->_quote = $this->_getCheckoutSession()->getQuote();
+            $this->_quote = $this->_checkoutSession->getQuote();
         }
         return $this->_quote;
     }

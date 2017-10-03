@@ -199,7 +199,7 @@ class Api extends \Magento\Framework\DataObject
     /**
      * Sets the redirect payment page url to be used for requests.
      *
-     * @param string $gateway 
+     * @param string $gateway
      */
     public static function setGatewayEndpoint($gateway)
     {
@@ -227,7 +227,7 @@ class Api extends \Magento\Framework\DataObject
     public function doGetTransaction($txn_id)
     {
         $method = \PayU\EasyPlus\Model\ConfigProvider::CODE;
-        $reference = $txn_id['PayUReference'] ?: $txn_id;
+        $reference = isset($txn_id['PayUReference']) ? $txn_id['PayUReference'] : $txn_id;
 
         $data['Api'] = self::getApiVersion();
         $data['Safekey'] = $this->scopeConfig->getValue(
@@ -248,7 +248,7 @@ class Api extends \Magento\Framework\DataObject
     }
 
     public function doSetTransaction($requestData)
-    {        
+    {
         $response = self::getSoapSingleton()->setTransaction($requestData);
 
         return json_decode(json_encode($response));
@@ -261,7 +261,7 @@ class Api extends \Magento\Framework\DataObject
             $header = self::getSoapHeader();
             $soapWsdlUrl = self::getSoapEndpoint().'?wsdl';
             self::$wsdlUrl = $soapWsdlUrl;
-            
+
             $headerBody = new \SoapVar($header, XSD_ANYXML, null, null, null);
             $soapHeader = new \SOAPHeader(self::$ns, 'Security', $headerBody, true);
 

@@ -42,16 +42,16 @@ class Response extends AbstractAction
 
         try {
             $payu = $this->_initPayUReference();
-          
+
             // if there is an order - load it
             $orderId = $this->_getCheckoutSession()->getLastOrderId();
             /** @var \Magento\Sales\Model\Order $order */
             $order = $orderId ? $this->_orderFactory->create()->load($orderId) : false;
             // TODO timeout
-            if($payu) {
-                $this->_response->setData('params', $payu);
+            if($payu && $order) {
+                $this->response->setData('params', $payu);
 
-                $result = $this->_response->process($order);
+                $result = $this->response->process($order);
 
                 if($result !== true) {
                     $this->messageManager->addErrorMessage(
@@ -59,20 +59,13 @@ class Response extends AbstractAction
                     );
                 } else {
 
-                    $quote = $this->_getQuote();
-
                     $this->_checkoutSession
-                        ->setLastQuoteId($quote->getId())
-                        ->setLastSuccessQuoteId($quote->getId())
-                        ->clearHelperData();
+                        ->setLastQuoteId($order->getQuoteId())
+                        ->setLastSuccessQuoteId($order->getQuoteId());
 
-                    $order = $this->_quoteManagement->submit($quote);
-
-                    if ($order) {
-                        $this->_checkoutSession->setLastOrderId($order->getId())
-                            ->setLastRealOrderId($order->getIncrementId())
-                            ->setLastOrderStatus($order->getStatus());
-                    }
+                    $this->_checkoutSession->setLastOrderId($order->getId())
+                        ->setLastRealOrderId($order->getIncrementId())
+                        ->setLastOrderStatus($order->getStatus());
 
                     $this->messageManager->addSuccessMessage(
                         __('Payment was successful and we received your order with much fanfare')
@@ -80,7 +73,7 @@ class Response extends AbstractAction
 
                     return $this->_redirect('checkout/onepage/success');
                 }
-            } 
+            }
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to validate order'));
         } catch (\Exception $e) {
