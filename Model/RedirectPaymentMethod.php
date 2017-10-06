@@ -108,12 +108,26 @@ class RedirectPaymentMethod extends PayU
     protected $orderFactory;
     protected $quoteRepository;
     protected $orderSender;
+
+    /**
+     * @var \Magento\Sales\Model\Service\InvoiceService
+     */
     protected $_invoiceService;
+
+    /**
+     * @var \Magento\Sales\Api\OrderRepositoryInterface
+     */
+    protected $_orderRepository;
 
     /**
      * @var Transaction\BuilderInterface
      */
     protected $transactionBuilder;
+
+    /**
+     * @var \Magento\Framework\DB\Transaction
+     */
+    protected $_transaction;
 
     public function __construct(
         \Magento\Framework\Model\Context $context,
@@ -136,6 +150,8 @@ class RedirectPaymentMethod extends PayU
         \Magento\Sales\Model\OrderFactory $orderFactory,
         \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
+        \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
+        \Magento\Framework\DB\Transaction $transaction,
         array $data = array()
     ) {
         parent::__construct(
@@ -159,12 +175,14 @@ class RedirectPaymentMethod extends PayU
         $this->transactionRepository = $transactionRepository;
         $this->transactionBuilder = $transactionBuilder;
         $this->_invoiceService = $invoiceService;
+        $this->_orderRepository = $orderRepository;
         $this->_easyPlusApi = $apiFactory->create();
         $this->_session = $session;
         $this->_paymentData = $paymentData;
         $this->orderFactory = $orderFactory;
         $this->quoteRepository = $quoteRepository;
         $this->orderSender = $orderSender;
+        $this->_transaction = $transaction;
 
         $this->_easyPlusApi->setSafeKey(
             $this->getConfigData('safe_key')
@@ -555,9 +573,21 @@ class RedirectPaymentMethod extends PayU
 
             if($order->canInvoice()) {
                 $invoice = $this->_invoiceService->prepareInvoice($order);
-                //$invoice->setTransactionId($response->getTranxId());
-                $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
                 $invoice->register();
+                $invoice->save();
+                $transactionSave = $this->_transaction->addObject(
+                    $invoice
+                )->addObject(
+                    $invoice->getOrder()
+                );
+                $transactionSave->save();
+                $this->invoiceSender->send($invoice);
+                //send notification code
+                $order->addStatusHistoryComment(
+                    __('Notified customer about invoice #%1.', $invoice->getId())
+                )
+                ->setIsCustomerNotified(true)
+                ->save();
             }
 
             $quote = $this->quoteRepository->get($order->getQuoteId())->setIsActive(false);
