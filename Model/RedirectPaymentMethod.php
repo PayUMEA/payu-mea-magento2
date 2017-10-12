@@ -78,7 +78,7 @@ class RedirectPaymentMethod extends PayU
      * @var bool
      */
     protected $_canFetchTransactionInfo = true;
-
+    
     protected $_easyPlusApi                 = false;
     protected $_dataFactory                 = false;
     protected $_requestFactory              = false;
@@ -214,7 +214,7 @@ class RedirectPaymentMethod extends PayU
             $store = $this->_storeManager->getStore()->getId();
             $this->setData('store', $store);
         }
-
+        
         return $this;
     }
 
@@ -336,7 +336,7 @@ class RedirectPaymentMethod extends PayU
     {
         if (!$this->getResponse()->getTranxId()) {
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Please enter a valid PayU transaction ID')
+                __('Payment verification error: invalid PayU reference')
             );
         }
         return true;
@@ -368,9 +368,9 @@ class RedirectPaymentMethod extends PayU
         $payUReference = $this->_session->getCheckoutReference();
         if (!$payUReference) {
             return $this->_setupTransaction($payment, $amount);
-        } else {
-            $this->_importToPayment($this->getResponse(), $payment);
         }
+
+        $this->_importToPayment($this->getResponse(), $payment);
 
         $payment->setAdditionalInformation($this->_isOrderPaymentActionKey, true);
 
@@ -384,7 +384,7 @@ class RedirectPaymentMethod extends PayU
 
         $formattedPrice = $order->getBaseCurrency()->formatTxt($amount);
         if ($payment->getIsTransactionPending()) {
-            $message = __('The ordering amount of %1 is still pending approval on the payment gateway.', $formattedPrice);
+            $message = __('The ordered amount of %1 is still pending approval on the payment gateway.', $formattedPrice);
             $state = \Magento\Sales\Model\Order::STATE_PAYMENT_REVIEW;
         } else {
             $message = __('Ordered amount of %1', $formattedPrice);
@@ -421,8 +421,9 @@ class RedirectPaymentMethod extends PayU
         /** @var \Magento\Sales\Model\Order $order */
         $order = $payment->getOrder();
         $order->setCanSendNewEmailFlag(false);
-        //$payment->setBaseAmountOrdered($order->getBaseTotalDue());
-        //$payment->setAmountOrdered($order->getTotalDue());
+        $payment->setBaseAmountOrdered($order->getBaseTotalDue());
+        $payment->setAmountOrdered($order->getTotalDue());
+        $payment->getMethodInstance()->setIsInitializeNeeded(true);
 
         $helper = $this->_dataFactory->create('frontend');
 
@@ -437,17 +438,13 @@ class RedirectPaymentMethod extends PayU
                 $this->_session->setCheckoutReference($payUReference);
                 $this->_session->setCheckoutOrderIncrementId($order->getIncrementId());
 
-                $this->_checkoutSession->setCheckoutReference($payUReference);
-
                 $this->_easyPlusApi->setPayUReference($payUReference);
-
-                $this->_checkoutSession->setCheckoutRedirectUrl($this->_easyPlusApi->getRedirectUrl());
+                $this->_session->setCheckoutRedirectUrl($this->_easyPlusApi->getRedirectUrl());
 
                 // set session variables
-                $quoteId = $this->_checkoutSession->getQuote()->getId();
 
-                $this->_checkoutSession->setLastQuoteId($quoteId)
-                    ->setLastSuccessQuoteId($quoteId);
+                $this->_checkoutSession->setLastQuoteId($order->getQuoteId())
+                    ->setLastSuccessQuoteId($order->getQuoteId());
 
                 $this->_checkoutSession->setLastOrderId($order->getId())
                     ->setLastRealOrderId($order->getIncrementId())
@@ -461,6 +458,7 @@ class RedirectPaymentMethod extends PayU
                     $payUReference
                 );
                 $order->addStatusHistoryComment($message);
+                $order->setState(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
 
             } else {
                 throw new \Magento\Framework\Exception\LocalizedException(__('Inside PayU, server error encountered'));
@@ -476,8 +474,57 @@ class RedirectPaymentMethod extends PayU
         return $this;
     }
 
+    public function processCancellation($responseData)
+    {
+        $this->setResponseData($responseData);
+        $response = $this->getResponse();
+
+        $payUReference = $response->getTranxId();
+
+        //operate with order
+        $orderIncrementId = $response->getInvoiceNum();
+
+        $message = 'Payment transaction of amount of %1 was canceled by user on PayU.<br/>' . 'PayU reference "%2"<br/>';
+
+        $isError = false;
+        if ($orderIncrementId) {
+            /* @var $order \Magento\Sales\Model\Order */
+            $order = $this->orderFactory->create()->loadByIncrementId($orderIncrementId);
+            //check payment method
+            $payment = $order->getPayment();
+            if (!$payment || $payment->getMethod() != $this->getCode()) {
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    __('This payment didn\'t work out because we can\'t find this order.')
+                );
+            }
+            if ($order->getId()) {
+                //operate with order
+                $message = __(
+                    $message,
+                    $order->getBaseCurrency()->formatTxt($order->getBaseTotalDue()),
+                    $payUReference
+                );
+
+                $order->addStatusHistoryComment($message);
+                $order->cancel()->save();
+            } else {
+                $isError = true;
+            }
+        } else {
+            $isError = true;
+        }
+
+        if ($isError) {
+            $responseText = $this->_dataFactory->create('frontend')->wrapGatewayError($response->getResultMessage());
+            $responseText = $responseText
+                ? $responseText
+                : __('This payment didn\'t work out because we can\'t find this order.');
+            throw new \Magento\Framework\Exception\LocalizedException($responseText);
+        }
+    }
+
     /**
-     * Operate with order using data from $_POST which came from authorize.net by Relay URL.
+     * Operate with order using data from $_POST which came from PayU by Return URL.
      *
      * @param array $responseData data from PayU from $_POST
      * @return void
@@ -492,7 +539,7 @@ class RedirectPaymentMethod extends PayU
         $response = $this->getResponse();
         //operate with order
         $orderIncrementId = $response->getInvoiceNum();
-        $responseText = $this->_dataFactory->create('frontend')->wrapGatewayError($response->getResultMessage());
+
         $isError = false;
         if ($orderIncrementId) {
             /* @var $order \Magento\Sales\Model\Order */
@@ -515,6 +562,7 @@ class RedirectPaymentMethod extends PayU
         }
 
         if ($isError) {
+            $responseText = $this->_dataFactory->create('frontend')->wrapGatewayError($response->getResultMessage());
             $responseText = $responseText && !$response->isPaymentSuccessful()
                 ? $responseText
                 : __('This payment didn\'t work out because we can\'t find this order.');
@@ -618,8 +666,11 @@ class RedirectPaymentMethod extends PayU
         }
 
         if ($response->getTransactionState() == self::TRANS_STATE_AWAITING_PAYMENT) {
-            $payment->setIsTransactionPending(true)
-                ->setIsFraudDetected(true);
+            $payment->setIsTransactionPending(true);
+        }
+
+        if($response->isFraudDetected()) {
+            $payment->setIsFraudDetected(true);
         }
     }
 
@@ -675,17 +726,18 @@ class RedirectPaymentMethod extends PayU
      * @param bool $voidPayment
      * @return void
      */
-    protected function declineOrder(\Magento\Sales\Model\Order $order, $message = '', $voidPayment = true)
+    public function declineOrder(\Magento\Sales\Model\Order $order, $message = '', $voidPayment = true, $response)
     {
+        $payment = $order->getPayment();
         try {
-            $response = $this->getResponse();
             if (
-                $voidPayment && $response->getTranxId() && strtoupper($response->getTransactionType())
-                == self::REQUEST_TYPE_CREDIT
+                $voidPayment && $response->getTranxId()
+                && strtoupper($response->getTransactionType()) == self::REQUEST_TYPE_PAYMENT
             ) {
-                $order->getPayment()->setTransactionId(null)->setParentTransactionId($response->getTranxId())->void();
+                $this->_importToPayment($response, $payment);
+                $this->addStatusCommentOnUpdate($payment, $response);
+                $order->registerCancellation()->save();
             }
-            $order->registerCancellation($message)->save();
         } catch (\Exception $e) {
             //quiet decline
             $this->_logger->critical($e);
@@ -761,11 +813,8 @@ class RedirectPaymentMethod extends PayU
      */
     protected function _importToPayment($response, $payment)
     {
-        $payment->setTransactionId(
-            $response->getTranxId()
-        )->setIsTransactionClosed(
-            0
-        );
+        $payment->setTransactionId($response->getTranxId())
+            ->setIsTransactionClosed(0);
 
         $this->_easyPlusApi->importPaymentInfo($response, $payment);
     }
@@ -863,7 +912,7 @@ class RedirectPaymentMethod extends PayU
 
     public function getCheckoutRedirectUrl()
     {
-        return $this->_checkoutSession->getCheckoutRedirectUrl();
+        return $this->_session->getCheckoutRedirectUrl();
     }
 
     /**

@@ -35,12 +35,12 @@ class Redirect extends AbstractAction
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
 
         try {    
-            $url = $this->_checkoutSession->getCheckoutRedirectUrl();
+            $url = $this->_getSession()->getCheckoutRedirectUrl();
             if($url) {
                 return $resultRedirect->setPath($url);
             } else {
                 $this->messageManager->addErrorMessage(
-                    __('Unable to redirect to PayU. Checkout has been canceled.')
+                    __('Unable to redirect to PayU. Server error encountered.')
                 );
             }
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
@@ -48,6 +48,8 @@ class Redirect extends AbstractAction
         } catch (\Exception $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to redirect to PayU. Server error encountered'));
         }
+
+        $this->_returnCustomerQuote(true, __('Unable to redirect to PayU. Server error encountered'));
 
         return $resultRedirect->setPath('checkout/cart');
     }

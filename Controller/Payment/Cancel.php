@@ -37,25 +37,30 @@ class Cancel extends AbstractAction
      */
     public function execute()
     {
+        /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
+        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+
         try {
-            $this->_initReference(false);
+            $payu = $this->_initPayUReference();
           
             // if there is an order - cancel it
             $orderId = $this->_getCheckoutSession()->getLastOrderId();
 
             /** @var \Magento\Sales\Model\Order $order */
             $order = $orderId ? $this->_orderFactory->create()->load($orderId) : false;
-            if ($order && $order->getId() 
-                && $order->getQuoteId() == $this->_getSession()->getQuoteId()) 
+            if ($payu && $order
+                && $order->getQuoteId() == $this->_getCheckoutSession()->getLastSuccessQuoteId())
             {
-                $order->cancel()->save();
-                $this->clearCheckoutSessionData();
+                $this->response->setData('params', $payu);
+
+                $this->response->processCancel($order);
+
                 $this->messageManager->addErrorMessage(
-                    __('Payment unsuccessful. Checkout and Order have been canceled.')
+                    __('Payment transaction unsuccessful. User canceled payment transaction.')
                 );
             } else {
                 $this->messageManager->addErrorMessage(
-                    __('Payment unsuccessful. Cart was not found.')
+                    __('Payment unsuccessful. Failed to reload cart.')
                 );
             }
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
@@ -64,8 +69,8 @@ class Cancel extends AbstractAction
             $this->messageManager->addExceptionMessage($e, __('Unable to cancel Checkout'));
         }
 
-        /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $this->_returnCustomerQuote(true);
+
         return $resultRedirect->setPath('checkout/cart');
     }
 }

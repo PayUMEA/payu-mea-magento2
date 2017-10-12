@@ -274,9 +274,9 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
 
     protected function clearSessionData()
     {
-        $this->_getCheckoutSession()->clearStorage();
-
-        $this->_getSession()->clearStorage();
+        $this->_getSession()->unsCheckoutReference();
+        $this->_getSession()->unsCheckoutRedirectUrl();
+        $this->_getSession()->unsCheckoutOrderIncrementId();
     }
 
     /**
@@ -299,7 +299,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
                     /** @var \Magento\Quote\Model\Quote $quote */
                     $quote = $quoteRepository->get($order->getQuoteId());
 
-                    $quote->setIsActive(1)->setReservedOrderId(null);
+                    $quote->setIsActive(true)->setReservedOrderId(null);
                     $quoteRepository->save($quote);
                     $this->_getCheckoutSession()->replaceQuote($quote);
                 } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
@@ -307,6 +307,8 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
 
                 $this->_getSession()->unsCheckoutOrderIncrementId($incrementId);
                 $this->_getSession()->unsetData('quote_id');
+
+                $this->clearSessionData();
 
                 if ($cancelOrder) {
                     $order->registerCancellation($errorMsg)->save();

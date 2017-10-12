@@ -40,9 +40,10 @@ class Response extends AbstractAction
         /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
 
+        $result = '';
         try {
             $payu = $this->_initPayUReference();
-
+          
             // if there is an order - load it
             $orderId = $this->_getCheckoutSession()->getLastOrderId();
             /** @var \Magento\Sales\Model\Order $order */
@@ -51,7 +52,7 @@ class Response extends AbstractAction
             if($payu && $order) {
                 $this->response->setData('params', $payu);
 
-                $result = $this->response->process($order);
+                $result = $this->response->processReturn($order);
 
                 if($result !== true) {
                     $this->messageManager->addErrorMessage(
@@ -71,16 +72,18 @@ class Response extends AbstractAction
                         __('Payment was successful and we received your order with much fanfare')
                     );
 
+                    $this->clearSessionData();
+
                     return $this->_redirect('checkout/onepage/success');
                 }
-            }
+            } 
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to validate order'));
         } catch (\Exception $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to validate order'));
         }
 
-        $this->_returnCustomerQuote(false, 'Unable to validate order');
+        $this->_returnCustomerQuote(true, $result);
 
         return $resultRedirect->setPath('checkout/cart');
     }

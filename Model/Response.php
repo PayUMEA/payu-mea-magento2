@@ -99,7 +99,7 @@ class Response extends \Magento\Framework\DataObject
         return $this->getReturn()->transactionType;
     }
 
-	public function process($order)
+	public function processReturn($order)
 	{
 		$response = $this->api->doGetTransaction($this->getParams());
 		$payment = $order->getPayment();
@@ -111,9 +111,16 @@ class Response extends \Magento\Framework\DataObject
 			return true;
 		} else {
 		    $message = $response->getDisplayMessage();
-			$payment->getMethodInstance()->declineOrder($order, $message);
+			$payment->getMethodInstance()->declineOrder($order, $message, true, $response);
 
 			return $message;
 		}
 	}
+
+    public function processCancel($order)
+    {
+        $response = $this->api->doGetTransaction($this->getParams());
+        $payment = $order->getPayment();
+        $payment->getMethodInstance()->processCancellation($response->getReturn());
+    }
 }
