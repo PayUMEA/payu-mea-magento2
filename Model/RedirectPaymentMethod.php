@@ -108,6 +108,7 @@ class RedirectPaymentMethod extends PayU
     protected $orderFactory;
     protected $quoteRepository;
     protected $orderSender;
+    protected $invoiceSender;
 
     /**
      * @var \Magento\Sales\Model\Service\InvoiceService
@@ -152,6 +153,7 @@ class RedirectPaymentMethod extends PayU
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         \Magento\Framework\DB\Transaction $transaction,
+        \Magento\Sales\Model\Order\Email\Sender\InvoiceSender $invoiceSender,
         array $data = array()
     ) {
         parent::__construct(
@@ -182,6 +184,7 @@ class RedirectPaymentMethod extends PayU
         $this->orderFactory = $orderFactory;
         $this->quoteRepository = $quoteRepository;
         $this->orderSender = $orderSender;
+        $this->invoiceSender = $invoiceSender;
         $this->_transaction = $transaction;
 
         $this->_easyPlusApi->setSafeKey(
@@ -370,7 +373,7 @@ class RedirectPaymentMethod extends PayU
             return $this->_setupTransaction($payment, $amount);
         }
 
-        $this->_importToPayment($this->getResponse(), $payment);
+        /*$this->_importToPayment($this->getResponse(), $payment);
 
         $payment->setAdditionalInformation($this->_isOrderPaymentActionKey, true);
 
@@ -400,8 +403,8 @@ class RedirectPaymentMethod extends PayU
 
         $order->setState($state);
         $order->setCanSendNewEmailFlag(true);
-
-        $payment->setSkipOrderProcessing(true);
+        */
+        $payment->setSkipOrderProcessing(false);
 
         return $this;
     }
@@ -458,7 +461,10 @@ class RedirectPaymentMethod extends PayU
                     $payUReference
                 );
                 $order->addStatusHistoryComment($message);
-                $order->setState(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
+                $order->setState(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT)
+                    ->setStatus(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
+
+                $payment->setSkipOrderProcessing(true);
 
             } else {
                 throw new \Magento\Framework\Exception\LocalizedException(__('Inside PayU, server error encountered'));
@@ -598,12 +604,11 @@ class RedirectPaymentMethod extends PayU
         /* @var $payment \Magento\Payment\Model\InfoInterface|\Magento\Sales\Model\Order\Payment */
         $payment = $order->getPayment();
         $this->fillPaymentByResponse($payment);
-        $payment->getMethodInstance()->setIsInitializeNeeded(false);
-        $payment->getMethodInstance()->setResponseData($response->getReturn());
+        $this->setIsInitializeNeeded(false);
+        $this->setResponseData($response->getReturn());
         $this->processPaymentFraudStatus($payment);
         $this->addStatusCommentOnUpdate($payment, $response);
-        //$payment->place();
-        //$order->save();
+
         //match amounts. should be equals for authorization.
         //decline the order if amount does not match.
         if (!$this->matchAmount($payment->getBaseAmountOrdered())) {
@@ -618,6 +623,7 @@ class RedirectPaymentMethod extends PayU
         try {
             $order->setCanSendNewEmailFlag(true);
             $this->orderSender->send($order);
+            $payment->place();
 
             if($order->canInvoice()) {
                 $invoice = $this->_invoiceService->prepareInvoice($order);
@@ -638,11 +644,8 @@ class RedirectPaymentMethod extends PayU
                 ->save();
             }
 
-            $quote = $this->quoteRepository->get($order->getQuoteId())->setIsActive(false);
-            $this->quoteRepository->save($quote);
-
         } catch (\Exception $e) {
-            // do not cancel order if we couldn't send email
+            throw new \Magento\Framework\Exception\LocalizedException("Error encountered while processing your order");
         }
     }
 
