@@ -9,11 +9,11 @@
         "payu magento 2"
     ],
     "type": "magento2-module",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "homepage": "https://payu.co.za/",
     "license": [
-        "OSL-3.0",
-        "AFL-3.0"
+        "OSL-4.0",
+        "AFL-4.0"
     ],
     "authors": [
         {
