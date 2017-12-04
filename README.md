@@ -1,29 +1,41 @@
-# README #
+# PayU MEA Magento 2 extension #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+This guide details how to install the PayU MEA Magento v2.0+ / v2.1+ extension
 
-### What is this repository for? ###
+## Prerequisites
+* Magento 2.0 or 2.1 installed application
+* SSH access
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+## Dependencies
 
-### How do I get set up? ###
+The extension requires the following extension in order to work properly:
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+- [`soap`](https://php.net/manual/en/book.soap.php)
+- [`json`](https://php.net/manual/en/book.json.php)
 
-### Contribution guidelines ###
+## Installation
 
-* Writing tests
-* Code review
-* Other guidelines
+You can install the extension via [Composer](http://getcomposer.org/). Run the following command:
 
-### Who do I talk to? ###
+```bash
+composer require payumea/payu-mea-magento2
+```
+or add
+```bash
+payumea/payu-mea-magento2
+```
+to the **require** section of your composer.json and run `composer update`. After installing the extension you need 
+to enable the extension by excuting the following command.
 
-* Repo owner or admin
-* Other community or team contact
+```bash
+bin/magento module:enable --clear-static-content PayU_EasyPlus
+bin/magento setup:upgrade
+bin/magento cache:clean
+```
+## Configuration
+To configure the extension, you have to navigate to **Stores > Configuration > Sales > Payment Methods** and find PayU 
+extension listed among other payment methods
+
+### Who do I talk to if I run into any issue? ###
+
+* Just send an email to **support@payu.co.za** or open an issue using the issue tracker
