@@ -52,7 +52,7 @@
                 </field>
                 <field id="payment_methods" translate="label" type="textarea" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Payment Methods Code</label>
-                    <comment>Enter supported payment method, one per line.</comment>
+                    <comment>Enter supported payment method, separated by comma.</comment>
                 </field>
                 <field id="redirect_channel" translate="label" type="radios" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Redirect Channel</label>
@@ -139,7 +139,7 @@
                 </field>
                 <field id="payment_methods" translate="label" type="textarea" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Payment Methods Code</label>
-                    <comment>Enter supported payment method, one per line.</comment>
+                    <comment>Enter supported payment method, seperated by comma.</comment>
                 </field>
                 <field id="redirect_channel" translate="label" type="radios" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Redirect Channel</label>
