@@ -17,7 +17,7 @@ namespace PayU\EasyPlus\Model;
  * @method string getRequestBody()
  * @method \PayU\EasyPlus\Model\Debug setRequestBody(string $value)
  * @method string getResponseBody()
- * @method \PayU\EasyPlus\Debug setResponseBody(string $value)
+ * @method \PayU\EasyPlus\Model\Debug setResponseBody(string $value)
  * @method string getRequestSerialized()
  * @method \PayU\EasyPlus\Model\Debug setRequestSerialized(string $value)
  * @method string getResultSerialized()

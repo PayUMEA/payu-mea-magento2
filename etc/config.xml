@@ -8,28 +8,50 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Store/etc/config.xsd">
     <default>
         <payment>
-            <redirectpaymentmethod>
-                <model>PayU\EasyPlus\Model\RedirectPaymentMethod</model>
+            <payumea_generic>
+                <model>PayU\EasyPlus\Model\GenericRedirectPayment</model>
                 <active>0</active>
-                <title>PayU (Credit/Debit Card)</title>
-                <order_status>pending_payment</order_status>
-                <payment_action>order</payment_action>
-                <secure3d>0</secure3d>
-                <redirect_channel>responsive</redirect_channel>
-                <merchant_ref>PayU Easy/Plus Merchant Store</merchant_ref>
-                <safe_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
-                <api_username>Staging Integration Store 3</api_username>
-                <api_password backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
-                <payment_methods>CREDITCARD,EBUCKS,PAYPAL</payment_methods>
-                <payment_type>PAYMENT</payment_type>
-                <allowed_currency>ZAR</allowed_currency>
-                <gateway>0</gateway>
-                <secure3d>1</secure3d>
+                <title>Credit Card</title>
+                <environment>0</environment>
+                <api_username>100032</api_username>
+                <api_password>PypWWegU</api_password>
+                <safe_key>{CE62CE80-0EFD-4035-87C1-8824C5C46E7F}</safe_key>
+                <payment_methods>CREDITCARD,EBUCKS,EFT_PRO</payment_methods>
                 <redirect_channel>responsive</redirect_channel>
                 <min_order_total>50</min_order_total>
                 <max_order_total>5000000</max_order_total>
-                <sort_order>1</sort_order>
-            </redirectpaymentmethod>
+                <developer>
+                    <active>0</active>
+                    <log_file>payu_redirectpayment.log</log_file>
+                </developer>
+                <payment_url>
+                    <notification_url>payu_easyplus/payment/notify</notification_url>
+                    <return_url>payu_easyplus/payment/response</return_url>
+                    <cancel_url>payu_easyplus/payment/cancel</cancel_url>
+                </payment_url>
+            </payumea_generic>
+            <payumea_discoverymiles>
+                <model>PayU\EasyPlus\Model\DiscoveryMilesRedirectPayment</model>
+                <active>0</active>
+                <title>Discovery Miles</title>
+                <environment>0</environment>
+                <api_username>Staging Integration Store 3</api_username>
+                <api_password>WSAUFbw6</api_password>
+                <safe_key>{07F70723-1B96-4B97-B891-7BF708594EEA}</safe_key>
+                <payment_methods>DISCOVERYMILES</payment_methods>
+                <redirect_channel>web</redirect_channel>
+                <min_order_total>50</min_order_total>
+                <max_order_total>5000000</max_order_total>
+                <developer>
+                    <active>0</active>
+                    <log_file>payu_redirectpayment.log</log_file>
+                </developer>
+                <payment_url>
+                    <notification_url>payu_easyplus/payment/notify</notification_url>
+                    <return_url>payu_easyplus/payment/response</return_url>
+                    <cancel_url>payu_easyplus/payment/cancel</cancel_url>
+                </payment_url>
+            </payumea_discoverymiles>
         </payment>
     </default>
 </config>

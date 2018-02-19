@@ -13,23 +13,10 @@ namespace PayU\EasyPlus\Controller\Payment;
 
 use PayU\EasyPlus\Controller\AbstractAction;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Exception\LocalizedException;
 
 class Response extends AbstractAction
 {
-    /**
-     * Config mode type
-     *
-     * @var string
-     */
-    protected $_configType = 'PayU\EasyPlus\Model\ConfigProvider';
-
-    /**
-     * Config method type
-     *
-     * @var string
-     */
-    protected $_configMethod = \PayU\EasyPlus\Model\ConfigProvider::CODE;
-
     /**
      * Retrieve transaction information and validates payment
      *
@@ -77,7 +64,7 @@ class Response extends AbstractAction
                     return $this->_redirect('checkout/onepage/success');
                 }
             } 
-        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+        } catch (LocalizedException $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to validate order'));
         } catch (\Exception $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to validate order'));

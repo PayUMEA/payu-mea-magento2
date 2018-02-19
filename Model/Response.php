@@ -11,14 +11,22 @@
 
 namespace PayU\EasyPlus\Model;
 
-class Response extends \Magento\Framework\DataObject
+use PayU\EasyPlus\Model\Error\Code;
+use PayU\EasyPlus\Model\Api\Factory;
+use Magento\Framework\DataObject;
+/**
+ * Class Response
+ *
+ * @package PayU\EasyPlus\Model
+ */
+class Response extends DataObject
 {
 	protected $errorCode;
 	protected $api;
 
 	public function __construct(
-        \PayU\EasyPlus\Model\Error\Code $errorCodes,
-        \PayU\EasyPlus\Model\Api\Factory $apiFactory,
+        Code $errorCodes,
+        Factory $apiFactory,
         array $data = array()
 	) {
 		$this->errorCode = $errorCodes;
@@ -99,14 +107,20 @@ class Response extends \Magento\Framework\DataObject
         return $this->getReturn()->transactionType;
     }
 
+    /**
+     * Process return from PayU after payment
+     *
+     * @param $order
+     * @return bool
+     */
 	public function processReturn($order)
 	{
-		$response = $this->api->doGetTransaction($this->getParams());
 		$payment = $order->getPayment();
+        $payment->getMethodInstance()->process($this->getParams());
+        $response = $payment->getMethodInstance()->getResponse();
 
-		if($response && $response->isPaymentSuccessful()) {
+		if($response->isPaymentSuccessful()) {
 		    $this->api->importPaymentInfo($response, $payment);
-			$payment->getMethodInstance()->process($response->getReturn());
 
 			return true;
 		} else {
@@ -117,10 +131,14 @@ class Response extends \Magento\Framework\DataObject
 		}
 	}
 
+    /**
+     * Process user payment cancellation
+     *
+     * @param $order
+     */
     public function processCancel($order)
     {
-        $response = $this->api->doGetTransaction($this->getParams());
         $payment = $order->getPayment();
-        $payment->getMethodInstance()->processCancellation($response->getReturn());
+        $payment->getMethodInstance()->processCancellation($this->getParams());
     }
 }

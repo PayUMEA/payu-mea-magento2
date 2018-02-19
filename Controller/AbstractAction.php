@@ -7,6 +7,8 @@ namespace PayU\EasyPlus\Controller;
 
 use Magento\Checkout\Controller\Express\RedirectLoginInterface;
 use Magento\Framework\App\Action\Action as AppAction;
+use PayU\EasyPlus\Model\GenericConfigProvider;
+use PayU\EasyPlus\Model\DiscoveryMilesRedirectPayment;
 
 /**
  * Abstract Checkout Controller
@@ -14,13 +16,18 @@ use Magento\Framework\App\Action\Action as AppAction;
  */
 abstract class AbstractAction extends AppAction implements RedirectLoginInterface
 {
+    protected $configTypes = [
+        GenericConfigProvider::CODE => 'PayU\EasyPlus\Model\GenericConfigProvider',
+        DiscoveryMilesRedirectPayment::CODE => 'PayU\EasyPlus\Model\DiscoveryMilesConfigProvider'
+    ];
+
     /**
      * @var \Magento\Paypal\Model\Express\Checkout
      */
     protected $_checkout;
 
     /**
-     * @var \PayU\EasyPlus\Model\ConfigProvider
+     * @var \PayU\EasyPlus\Model\GenericConfigProvider
      */
     protected $_config;
 
@@ -30,14 +37,14 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
     protected $_quote = false;
 
     /**
-     * Config mode type
+     * Config provider class
      *
      * @var string
      */
     protected $_configType;
 
     /**
-     * Config method type
+     * Config method code
      *
      * @var string
      */
@@ -79,7 +86,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
     protected $_customerUrl;
 
     /**
-     * @var \PayU\EasyPlus\Model\Api
+     * @var \PayU\EasyPlus\Model\Api\Api
      */
     protected $_api;
 
@@ -103,8 +110,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
      * @param \Magento\Customer\Model\Url $customerUrl
      * @param \Magento\Quote\Model\QuoteManagement $quoteManagement
      * @param \PayU\EasyPlus\Model\Error\Code $errorCodes,
-     * @param \PayU\EasyPlus\Model\Response\Factory $responseFactory,
-     * @param \PayU\EasyPlus\Model\Api\Factory $apiFactory
+     * @param \PayU\EasyPlus\Model\Response\Factory $responseFactory
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
@@ -116,8 +122,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
         \Magento\Customer\Model\Url $customerUrl,
         \Magento\Quote\Model\QuoteManagement $quoteManagement,
         \PayU\EasyPlus\Model\Error\Code $errorCodes,
-        \PayU\EasyPlus\Model\Response\Factory $responseFactory,
-        \PayU\EasyPlus\Model\Api\Factory $apiFactory
+        \PayU\EasyPlus\Model\Response\Factory $responseFactory
     ) {
         $this->_customerSession = $customerSession;
         $this->_checkoutSession = $checkoutSession;
@@ -130,10 +135,6 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
 
         parent::__construct($context);
 
-        $parameters = ['params' => [$this->_configMethod]];
-
-        $this->_api = $apiFactory->create();
-        $this->_config = $this->_objectManager->create($this->_configType, $parameters);
         $this->response = $responseFactory->create();
     }
 

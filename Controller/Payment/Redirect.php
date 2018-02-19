@@ -12,20 +12,6 @@ use Magento\Framework\Controller\ResultFactory;
 class Redirect extends AbstractAction
 {
     /**
-     * Config mode type
-     *
-     * @var string
-     */
-    protected $_configType = 'PayU\EasyPlus\Model\ConfigProvider';
-
-    /**
-     * Config method type
-     *
-     * @var string
-     */
-    protected $_configMethod = \PayU\EasyPlus\Model\ConfigProvider::CODE;
-
-    /**
      *
      * @return \Magento\Framework\Controller\Result\Redirect
      */
@@ -43,8 +29,6 @@ class Redirect extends AbstractAction
                     __('Unable to redirect to PayU. Server error encountered.')
                 );
             }
-        } catch (\Magento\Framework\Exception\LocalizedException $e) {
-            $this->messageManager->addExceptionMessage($e, $e->getMessage());
         } catch (\Exception $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to redirect to PayU. Server error encountered'));
         }
