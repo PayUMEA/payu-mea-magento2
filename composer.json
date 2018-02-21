@@ -1,5 +1,5 @@
 {
-    "name": "payumea/payu-mea-magento2.2.0",
+    "name": "payumea/payu-mea-magento2.2",
     "description": "Secure payment processing via PayU MEA for Magento 2",
     "keywords": [
         "payu",
@@ -9,7 +9,7 @@
         "payu magento 2"
     ],
     "type": "magento2-module",
-    "version": "0.0.5",
+    "version": "1.0.0",
     "homepage": "https://payu.co.za/",
     "license": [
         "OSL-3.0",
