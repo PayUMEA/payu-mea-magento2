@@ -10,6 +10,7 @@
  */
 namespace PayU\EasyPlus\Block;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Block\Info;
 
 /**
@@ -59,6 +60,7 @@ class Main extends Info
      * Get helper data
      *
      * @param string $area
+     * @throws LocalizedException
      * @return \PayU\EasyPlus\Helper\Backend\Data|\PayU\EasyPlus\Helper\Data
      */
     public function getHelper($area)

@@ -15,8 +15,10 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Sales\Model\OrderFactory;
-use Magento\Authorizenet\Model\Directpost;
 use Magento\Authorizenet\Model\Authorizenet;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\UrlInterface;
 
 /**
  * PayU EasyPlus Data Helper
@@ -41,34 +43,26 @@ class Data extends AbstractHelper
     protected $allowedCurrencyCodes = ['NGN', 'ZAR'];
 
     /**
-     * Transaction statuses key to value map
-     *
-     * @var array
+     * @var ScopeConfigInterface
      */
-    protected $transactionStatuses = [
-        'authorizedPendingCapture' => 'Authorized/Pending Capture',
-        'capturedPendingSettlement' => 'Captured/Pending Settlement',
-        'refundSettledSuccessfully' => 'Refund/Settled Successfully',
-        'refundPendingSettlement' => 'Refund/Pending Settlement',
-        'declined' => 'Declined',
-        'expired' => 'Expired',
-        'voided' => 'Voided',
-        'FDSPendingReview' => 'FDS - Pending Review',
-        'FDSAuthorizedPendingReview' => 'FDS - Authorized/Pending Review'
-    ];
+    protected $scopeConfig;
 
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Magento\Sales\Model\OrderFactory $orderFactory
+     * @param Context $context
+     * @param StoreManagerInterface $storeManager
+     * @param OrderFactory $orderFactory
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
-        OrderFactory $orderFactory
+        OrderFactory $orderFactory,
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->storeManager = $storeManager;
         $this->orderFactory = $orderFactory;
+        $this->scopeConfig = $scopeConfig;
+
         parent::__construct($context);
     }
 
@@ -81,7 +75,7 @@ class Data extends AbstractHelper
      */
     protected function _getUrl($route, $params = [])
     {
-        $params['_type'] = \Magento\Framework\UrlInterface::URL_TYPE_LINK;
+        $params['_type'] = UrlInterface::URL_TYPE_LINK;
         if (isset($params['is_secure'])) {
             $params['_secure'] = (bool)$params['is_secure'];
         } elseif ($this->storeManager->getStore()->isCurrentlySecure()) {
@@ -186,7 +180,7 @@ class Data extends AbstractHelper
         }
         $message[] = ($exception) ? '- ' . __('failed.') : '- ' . __('successful.');
         if ($lastTransactionId !== null) {
-            $message[] = __('Authorize.Net Transaction ID %1.', $lastTransactionId);
+            $message[] = __('PayU Transaction ID %1.', $lastTransactionId);
         }
         if ($additionalMessage) {
             $message[] = $additionalMessage;
@@ -235,27 +229,56 @@ class Data extends AbstractHelper
     /**
      * Get post return url
      *
+     * @param string $methodCode
      * @param null|int|string $storeId
      * @return string
      */
-    public function getReturnUrl($storeId = null)
+    public function getReturnUrl($methodCode, $storeId = null)
     {
         $baseUrl = $this->storeManager->getStore($storeId)
-            ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
-        return $baseUrl . 'payu_easyplus/payment/response';
+            ->getBaseUrl(UrlInterface::URL_TYPE_LINK);
+        $returnUrl = $this->scopeConfig->getValue(
+            "payment/{$methodCode}/payment_url/return_url",
+            ScopeInterface::SCOPE_STORE);
+
+        return $baseUrl . $returnUrl;
     }
 
     /**
      * Get post cancel url
      *
+     * @param string methodCode
      * @param null|int|string $storeId
      * @return string
      */
-    public function getCancelUrl($storeId = null)
+    public function getCancelUrl($methodCode, $storeId = null)
     {
         $baseUrl = $this->storeManager->getStore($storeId)
-            ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
-        return $baseUrl . 'payu_easyplus/payment/cancel';
+            ->getBaseUrl(UrlInterface::URL_TYPE_LINK);
+        $cancelUrl = $this->scopeConfig->getValue(
+            "payment/{$methodCode}/payment_url/cancel_url",
+            ScopeInterface::SCOPE_STORE);
+
+        return $baseUrl . $cancelUrl;
+    }
+
+    /**
+     * Get post cancel url
+     *
+     * @param string $methodCode
+     * @param null|int|string $storeId
+     * @return string
+     */
+    public function getNotificationUrl($methodCode, $storeId = null)
+    {
+        $baseUrl = $this->storeManager->getStore($storeId)
+            ->getBaseUrl(UrlInterface::URL_TYPE_LINK);
+
+        $notificationUrl = $this->scopeConfig->getValue(
+            "payment/{$methodCode}/payment_url/notification_url",
+            ScopeInterface::SCOPE_STORE);
+
+        return $baseUrl . $notificationUrl;
     }
 
     /**

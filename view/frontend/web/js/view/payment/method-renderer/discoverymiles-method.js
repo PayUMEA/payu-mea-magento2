@@ -29,7 +29,7 @@ function (
 
         return Component.extend({
             defaults: {
-                template: 'PayU_EasyPlus/payment/redirectpaymentmethod'
+                template: 'PayU_EasyPlus/payment/discoverymiles'
             },
 
             getCode: function() {
@@ -71,14 +71,9 @@ function (
                 window.location.replace(url.build('payu_easyplus/payment/redirect'));
             },
 
-            /** Returns payment acceptance mark link path */
-            getPaymentMethodHref: function() {
-                return window.checkoutConfig.payment.easyPlus.redirectAcceptanceMarkHref;
-            },
-
-            /** Returns payment acceptance mark image path */
+            /** Returns payment image path */
             getPaymentMethodImageSrc: function() {
-                return window.checkoutConfig.payment.easyPlus.redirectAcceptanceMarkSrc;
+                return require.toUrl('images/discoverymiles_2016.jpg');
             }
         });
     }

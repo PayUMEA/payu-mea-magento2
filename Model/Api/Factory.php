@@ -22,27 +22,24 @@ class Factory
      *
      * @var string
      */
-    protected $instanceName;
+    protected $instanceName = 'PayU\EasyPlus\Model\Api\Api';
 
     /**
      * Factory constructor
      *
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
-     * @param string $instanceName
      */
     public function __construct(
-        \Magento\Framework\ObjectManagerInterface $objectManager,
-        $instanceName = 'PayU\EasyPlus\Model\Api'
+        \Magento\Framework\ObjectManagerInterface $objectManager
     ) {
         $this->objectManager = $objectManager;
-        $this->instanceName = $instanceName;
     }
 
     /**
      * Create class instance with specified parameters
      *
      * @param array $data
-     * @return \PayU\EasyPlus\Model\Api
+     * @return \PayU\EasyPlus\Model\Api\Api
      */
     public function create(array $data = [])
     {

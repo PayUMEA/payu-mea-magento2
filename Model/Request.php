@@ -11,29 +11,37 @@
 
 namespace PayU\EasyPlus\Model;
 
-class Request extends \Magento\Framework\DataObject
+use PayU\EasyPlus\Helper\Data;
+use Magento\Sales\Model\Order;
+use Magento\Framework\DataObject;
+
+class Request extends DataObject
 {
     /**
      * Set PayU data to request.
      *
-     * @param \PayU\EasyPlus\Model\RedirectPaymentMethod $paymentMethod
+     * @param AbstractRedirectPayment $paymentMethod
+     * @param Order $order
+     * @param Data $helper
+     * @throws
      * @return $this
      */
 	public function setConstantData(
-	    \PayU\EasyPlus\Model\RedirectPaymentMethod $paymentMethod,
-        \Magento\Sales\Model\Order $order,
+	    AbstractRedirectPayment $paymentMethod,
+        Order $order,
         $helper
     ) {
         $this->setData('Api', $paymentMethod->getApi()->getApiVersion())
             ->setData('Safekey', $paymentMethod->getApi()->getSafeKey())
-            ->setData('TransactionType', $paymentMethod->getValue('payment_type'))
+            ->setData('TransactionType', 'PAYMENT')
             ->setData('AdditionalInformation', array(
                 'merchantReference'         => $order->getIncrementId(),
-                'cancelUrl'                 => $helper->getCancelUrl(),
-                'returnUrl'                 => $helper->getReturnUrl(),
+                'notificationUrl'           => $helper->getNotificationUrl($paymentMethod->getCode()),
+                'cancelUrl'                 => $helper->getCancelUrl($paymentMethod->getCode()),
+                'returnUrl'                 => $helper->getReturnUrl($paymentMethod->getCode()),
                 'supportedPaymentMethods'   => $paymentMethod->getConfigData('payment_methods'),
                 'redirectChannel'           => $paymentMethod->getConfigData('redirect_channel'),
-                'secure3d'                  => $paymentMethod->getConfigData('secure3d') ? 'True' : 'False'
+                'secure3d'                  => 'True'
             ));
 
         return $this;
@@ -42,18 +50,18 @@ class Request extends \Magento\Framework\DataObject
     /**
      * Set entity data to request
      *
-     * @param \Magento\Sales\Model\Order $order
-     * @param \PayU\EasyPlus\Model\RedirectPaymentMethod $paymentMethod
+     * @param Order $order
+     * @param AbstractRedirectPayment $paymentMethod
      * @return $this
      */
 	public function setDataFromOrder(
-        \Magento\Sales\Model\Order $order,
-        \PayU\EasyPlus\Model\RedirectPaymentMethod $paymentMethod
+        Order $order,
+        AbstractRedirectPayment $paymentMethod
     ) {
 	    $this->setData('Basket', array(
             'description' => sprintf('#%s, %s', $order->getIncrementId(), $order->getCustomerEmail()),
             'amountInCents' => ($order->getBaseTotalDue() * 100),
-            'currencyCode' => $paymentMethod->getValue('allowed_currency'))
+            'currencyCode' => $paymentMethod->getValue('currency'))
         )
         ->setData('Customer', array(
             'merchantUserId' => $order->getCustomerId(),

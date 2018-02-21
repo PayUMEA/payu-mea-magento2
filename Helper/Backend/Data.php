@@ -15,25 +15,27 @@ use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Backend\Model\UrlInterface;
-
+use Magento\Framework\App\Config\ScopeConfigInterface;
 /**
- * Authorize.net Backend Data Helper
+ * PayU EasyPlus Backend Data Helper
  */
 class Data extends FrontendDataHelper
 {
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Magento\Sales\Model\OrderFactory $orderFactory
-     * @param \Magento\Backend\Model\UrlInterface $backendUrl
+     * @param Context $context
+     * @param StoreManagerInterface $storeManager
+     * @param OrderFactory $orderFactory
+     * @param UrlInterface $backendUrl
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
         OrderFactory $orderFactory,
-        UrlInterface $backendUrl
+        UrlInterface $backendUrl,
+        ScopeConfigInterface $scopeConfig
     ) {
-        parent::__construct($context, $storeManager, $orderFactory);
+        parent::__construct($context, $storeManager, $orderFactory, $scopeConfig);
         $this->_urlBuilder = $backendUrl;
     }
 
