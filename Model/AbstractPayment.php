@@ -29,7 +29,7 @@ use Magento\Sales\Api\Data\TransactionInterface;
  * @SuppressWarnings(PHPMD.TooManyFields)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class AbstractRedirectPayment extends AbstractPayU
+class AbstractPayment extends AbstractPayU
 {
     const CODE = null;
     /**
@@ -90,6 +90,12 @@ class AbstractRedirectPayment extends AbstractPayU
     protected $_maxAmount                   = null;
     protected $_redirectUrl                 = '';
     protected $_supportedCurrencyCodes      = array('ZAR', 'NGN');
+    /**
+     * Fields that should be replaced in debug with '***'
+     *
+     * @var array
+     */
+    protected $_debugReplacePrivateDataKeys = ['Safekey'];
     /**
      * Payment additional information key for payment action
      *
@@ -263,6 +269,19 @@ class AbstractRedirectPayment extends AbstractPayU
     }
 
     /**
+     * Define if debugging is enabled
+     *
+     * @return bool
+     * @SuppressWarnings(PHPMD.BooleanGetMethodName)
+     * @api
+     * @deprecated 100.2.0
+     */
+    public function getDebugFlag()
+    {
+        return (bool)(int)$this->getConfigData('developer/active');
+    }
+
+    /**
      * Availability for currency
      *
      * @param string $currencyCode
@@ -352,6 +371,7 @@ class AbstractRedirectPayment extends AbstractPayU
      */
     protected function _setupTransaction(InfoInterface $payment, $amount)
     {
+        $response = null;
         $this->validateAmount($amount);
 
         /** @var \Magento\Sales\Model\Order $order */
@@ -362,10 +382,10 @@ class AbstractRedirectPayment extends AbstractPayU
         $payment->getMethodInstance()->setIsInitializeNeeded(true);
 
         $helper = $this->_dataFactory->create('frontend');
+        $request = $this->generateRequestFromOrder($order, $helper);
 
         try {
 
-            $request = $this->generateRequestFromOrder($order, $helper);
             $response = $this->_easyPlusApi->doSetTransaction($request->getData());
 
             if($response->return->successful) {
@@ -401,8 +421,8 @@ class AbstractRedirectPayment extends AbstractPayU
                 throw new LocalizedException(__('Contacting PayU gateway, error encountered'));
             }
         } catch (\Exception $e) {
-            //$this->debugData(['request' => $request->getData(), 'exception' => $e->getMessage()]);
-            //$this->debugData(['response' => $response]);
+            $this->debugData(['request' => $request->getData(), 'exception' => $e->getMessage()]);
+            $this->debugData(['response' => $response]);
             $this->_logger->error(__('Contacting PayU gateway, error encountered. Reason: ' . $e->getMessage()));
 
             throw new LocalizedException(__('Oops! Transaction processing encountered an error.'));
@@ -467,6 +487,106 @@ class AbstractRedirectPayment extends AbstractPayU
                 : __('This payment didn\'t work out because we can\'t find this order.');
 
             throw new LocalizedException($responseText);
+        }
+    }
+
+    /**
+     * Process PayU IPN
+     *
+     * @param $data
+     * @param Order $order
+     * @throws \Exception
+     */
+    public function processNotification($data, $order)
+    {
+        if($order->getState() == strtolower(AbstractPayU::TRANS_STATE_PROCESSING))
+            return;
+
+        $payuReference = $data['PayUReference'];
+        $response = $this->_easyPlusApi->doGetTransaction($payuReference, $this);
+        $resultCode = $response->getResultCode();
+
+        $transactionNotes = "<strong>-----PAYU IPN RECEIVED---</strong><br />";
+        //Checking the response from the SOAP call to see if IPN is valid
+        if(isset($resultCode) && (!in_array($resultCode, array('POO5', 'EFTPRO_003', '999', '305')))) {
+
+            if(isset($data['TransactionState'])
+                && (in_array($data['TransactionState'],  array('PROCESSING', 'SUCCESSFUL', 'AWAITING_PAYMENT', 'FAILED', 'TIMEOUT', 'EXPIRED')))
+            ) {
+                $amountBasket = $data['Basket']['AmountInCents'] / 100;
+                $amountPaid = isset($data['PaymentMethodsUsed']['Creditcard']['AmountInCents'])
+                    ? $data['PaymentMethodsUsed']['Creditcard']['AmountInCents'] / 100 : '';
+
+                if(empty($amountPaid)) {
+                    $amountPaid = isset($data['PaymentMethodsUsed']['Eft']['AmountInCents']) ?
+                        $data['PaymentMethodsUsed']['Eft']['AmountInCents'] / 100 : 'N/A';
+                }
+
+                $transactionNotes .= "Order Amount: " . $amountBasket . "<br />";
+                $transactionNotes .= "Amount Paid: " . $amountPaid . "<br />";
+                $transactionNotes .= "Merchant Reference : " . $data['MerchantReference'] . "<br />";
+                $transactionNotes .= "PayU Reference: " . $payuReference . "<br />";
+                $transactionNotes .= "PayU Payment Status: ". $data["TransactionState"]."<br /><br />";
+
+                $paymentMethod = isset($data['PaymentMethodsUsed']['Creditcard']) ?
+                    $data['PaymentMethodsUsed']['Creditcard'] : '';
+
+                if(empty($paymentMethod))
+                    $paymentMethod = isset($data['PaymentMethodsUsed']['Eft']) ? $data['PaymentMethodsUsed']['Eft'] : '';
+
+                if(!empty($paymentMethod)) {
+                    if(is_array($paymentMethod)) {
+                        $transactionNotes .= "<strong>Payment Method Details:</strong>";
+                        foreach($paymentMethod as $key => $value) {
+                            $transactionNotes .= "<br />&nbsp;&nbsp;- ".$key.":".$value." , ";
+                        }
+                    }
+                }
+
+                // update order state
+                switch ($data['TransactionState']) {
+                    // Payment completed
+                    case 'SUCCESSFUL':
+                        $order->addStatusHistoryComment($transactionNotes, 'processing');
+                        break;
+                    case 'FAILED':
+                    case 'TIMEOUT':
+                    case 'EXPIRED':
+                        $order->addStatusHistoryComment($transactionNotes, 'cancel');
+                        break;
+                    case 'AWAITING_PAYMENT':
+                    case 'PROCESSING':
+                        $order->addStatusHistoryComment($transactionNotes, true);
+                        break;
+                    default:
+                        $order->addStatusHistoryComment($transactionNotes, true);
+                }
+
+                $order->save();
+                $this->debugData(['info' => 'PayU IPN Processing complete.', 'response' => $data]);
+            } else {
+
+                $transactionNotes = '<strong>Payment unsuccessful: </strong><br />';
+                $transactionNotes .= "PayU Reference: " . $response->getTranxId() . "<br />";
+                $transactionNotes .= "Point Of Failure: " . $response->getPointOfFailure() . "<br />";
+                $transactionNotes .= "Result Code: " . $response->getResultCode();
+                $transactionNotes .= "Result Message: " . $response->getResultMessage();
+
+                $order->registerCancellation($transactionNotes);
+
+                $this->debugData(['info' => 'PayU payment Failed. Payment status unknown']);
+            }
+        } else {
+
+            $transactionNotes = '<strong>Payment unsuccessful: </strong><br />';
+            $transactionNotes .= "PayU Reference: " . $response->getTranxId() . "<br />";
+            $transactionNotes .= "Point Of Failure: " . $response->getPointOfFailure() . "<br />";
+            $transactionNotes .= "Result Code: " . $response->getResultCode();
+            $transactionNotes .= "Result Message: " . $response->getResultMessage();
+
+            $order->registerCancellation($transactionNotes);
+
+            $this->debugData(['info' => 'PayU payment Failed']);
         }
     }
 
@@ -781,10 +901,7 @@ class AbstractRedirectPayment extends AbstractPayU
      * @param Payment $payment
      * @param DataObject $response
      */
-    protected function addStatusCommentOnUpdate(
-        Payment $payment,
-        DataObject $response
-    ) {
+    protected function addStatusCommentOnUpdate(Payment $payment, DataObject $response) {
         $transactionId = $response->getTranxId();
 
         if ($payment->getIsTransactionApproved()) {

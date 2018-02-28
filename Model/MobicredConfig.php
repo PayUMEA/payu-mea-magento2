@@ -15,18 +15,18 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Customer\Helper\Session\CurrentCustomer;
-use Magento\Framework\View\Result\PageFactory;
+use Magento\Framework\View\Asset\Repository;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use PayU\EasyPlus\Helper\Data as EasyPlusHelper;
 
 /**
- * Class DiscoveryMilesConfigProvider
+ * Class MobicredConfig
  *
- * Discovery Miles payment method configuration provider
+ * General payment method configuration provider
  */
-class DiscoveryMilesConfigProvider implements ConfigProviderInterface
+class MobicredConfig implements ConfigProviderInterface
 {
-    const CODE = DiscoveryMilesRedirectPayment::CODE;
+    const CODE = Mobicred::CODE;
 
     /**
      * @var ResolverInterface
@@ -53,17 +53,14 @@ class DiscoveryMilesConfigProvider implements ConfigProviderInterface
      */
     protected $paymentHelper;
 
-    /**
-     * @var PageFactory
-     */
-    protected $pageFactory;
+    protected $assetRepo;
 
     /**
      * @param ResolverInterface $localeResolver
      * @param CurrentCustomer $currentCustomer
      * @param EasyPlusHelper $easyplusHelper
      * @param PaymentHelper $paymentHelper
-     * @param PageFactory $pageFactory
+     * @param Repository $assetRepo
      *
      * @throws LocalizedException
      */
@@ -72,13 +69,13 @@ class DiscoveryMilesConfigProvider implements ConfigProviderInterface
         CurrentCustomer $currentCustomer,
         EasyPlusHelper $easyplusHelper,
         PaymentHelper $paymentHelper,
-        PageFactory $pageFactory
+        Repository $assetRepo
     ) {
         $this->localeResolver = $localeResolver;
         $this->currentCustomer = $currentCustomer;
         $this->easyplusHelper = $easyplusHelper;
         $this->paymentHelper = $paymentHelper;
-        $this->pageFactory = $pageFactory;
+        $this->assetRepo      = $assetRepo;
 
         $this->method = $this->paymentHelper->getMethodInstance(self::CODE);
     }
@@ -92,7 +89,7 @@ class DiscoveryMilesConfigProvider implements ConfigProviderInterface
         if ($this->method->isAvailable()) {
             $config = [
                 'payment' => [
-                    'discoveryMiles' => [
+                    'mobicred' => [
                         'imageSrc' => $this->getPaymentMethodImageUrl(),
                         'redirectUrl' => $this->getMethodRedirectUrl()
                     ]
@@ -121,6 +118,6 @@ class DiscoveryMilesConfigProvider implements ConfigProviderInterface
      */
     public function getPaymentMethodImageUrl()
     {
-        return 'https://www.discovery.co.za/site/binaries/content/gallery/managedcontent/discoverycoza/credit-card/rewards-and-benefits/vitality-miles.png';
+        return $this->assetRepo->getUrl( 'PayU_EasyPlus::images/mobicred.png');
     }
 }

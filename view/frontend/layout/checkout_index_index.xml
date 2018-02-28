@@ -27,10 +27,22 @@
                                                                 <item name="easy-plus" xsi:type="array">
                                                                     <item name="component" xsi:type="string">PayU_EasyPlus/js/view/payment/easy-plus</item>
                                                                     <item name="methods" xsi:type="array">
-                                                                        <item name="payumea_generic" xsi:type="array">
+                                                                        <item name="payumea_creditcard" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                        <item name="payumea_ebucks" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                        <item name="payumea_eftpro" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                         <item name="payumea_discoverymiles" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                        <item name="payumea_mobicred" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                        <item name="payumea_ucount" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                     </item>

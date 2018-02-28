@@ -20,14 +20,14 @@ class Request extends DataObject
     /**
      * Set PayU data to request.
      *
-     * @param AbstractRedirectPayment $paymentMethod
+     * @param AbstractPayment $paymentMethod
      * @param Order $order
      * @param Data $helper
      * @throws
      * @return $this
      */
 	public function setConstantData(
-	    AbstractRedirectPayment $paymentMethod,
+        AbstractPayment $paymentMethod,
         Order $order,
         $helper
     ) {
@@ -51,12 +51,12 @@ class Request extends DataObject
      * Set entity data to request
      *
      * @param Order $order
-     * @param AbstractRedirectPayment $paymentMethod
+     * @param AbstractPayment $paymentMethod
      * @return $this
      */
 	public function setDataFromOrder(
         Order $order,
-        AbstractRedirectPayment $paymentMethod
+        AbstractPayment $paymentMethod
     ) {
 	    $this->setData('Basket', array(
             'description' => sprintf('#%s, %s', $order->getIncrementId(), $order->getCustomerEmail()),

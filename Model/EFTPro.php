@@ -15,14 +15,14 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Model\InfoInterface;
 
 /**
- * Redirect payment method model for all payment methods except Discovery Miles
+ * Payment model for payment method EFTPro
  *
  * @SuppressWarnings(PHPMD.TooManyFields)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class GenericRedirectPayment extends AbstractRedirectPayment
+class EFTPro extends AbstractPayment
 {
-    const CODE = 'payumea_generic';
+    const CODE = 'payumea_eftpro';
 
     /**
      * Payment code

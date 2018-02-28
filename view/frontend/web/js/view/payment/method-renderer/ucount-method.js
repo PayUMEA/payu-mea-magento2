@@ -29,7 +29,7 @@ function (
 
         return Component.extend({
             defaults: {
-                template: 'PayU_EasyPlus/payment/generic'
+                template: 'PayU_EasyPlus/payment/ucount'
             },
 
             getCode: function() {
@@ -73,7 +73,7 @@ function (
 
             /** Returns payment image path */
             getPaymentMethodImageSrc: function() {
-                return window.checkoutConfig.payment.generic.imageSrc;
+                return window.checkoutConfig.payment.ucount.imageSrc;
             }
         });
     }

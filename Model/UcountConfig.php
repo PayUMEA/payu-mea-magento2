@@ -15,17 +15,18 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Customer\Helper\Session\CurrentCustomer;
+use Magento\Framework\View\Asset\Repository;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use PayU\EasyPlus\Helper\Data as EasyPlusHelper;
 
 /**
- * Class CreditCardConfigProvider
+ * Class UcountConfig
  *
  * General payment method configuration provider
  */
-class GenericConfigProvider implements ConfigProviderInterface
+class UcountConfig implements ConfigProviderInterface
 {
-    const CODE = GenericRedirectPayment::CODE;
+    const CODE = Ucount::CODE;
 
     /**
      * @var ResolverInterface
@@ -52,11 +53,14 @@ class GenericConfigProvider implements ConfigProviderInterface
      */
     protected $paymentHelper;
 
+    protected $assetRepo;
+
     /**
      * @param ResolverInterface $localeResolver
      * @param CurrentCustomer $currentCustomer
      * @param EasyPlusHelper $easyplusHelper
      * @param PaymentHelper $paymentHelper
+     * @param Repository $assetRepo
      *
      * @throws LocalizedException
      */
@@ -64,12 +68,14 @@ class GenericConfigProvider implements ConfigProviderInterface
         ResolverInterface $localeResolver,
         CurrentCustomer $currentCustomer,
         EasyPlusHelper $easyplusHelper,
-        PaymentHelper $paymentHelper
+        PaymentHelper $paymentHelper,
+        Repository $assetRepo
     ) {
         $this->localeResolver = $localeResolver;
         $this->currentCustomer = $currentCustomer;
         $this->easyplusHelper = $easyplusHelper;
         $this->paymentHelper = $paymentHelper;
+        $this->assetRepo      = $assetRepo;
 
         $this->method = $this->paymentHelper->getMethodInstance(self::CODE);
     }
@@ -83,7 +89,7 @@ class GenericConfigProvider implements ConfigProviderInterface
         if ($this->method->isAvailable()) {
             $config = [
                 'payment' => [
-                    'generic' => [
+                    'ucount' => [
                         'imageSrc' => $this->getPaymentMethodImageUrl(),
                         'redirectUrl' => $this->getMethodRedirectUrl()
                     ]
@@ -112,6 +118,6 @@ class GenericConfigProvider implements ConfigProviderInterface
      */
     public function getPaymentMethodImageUrl()
     {
-        return 'https://www.paypalobjects.com/webstatic/en_US/i/buttons/pp-acceptance-%s.png';
+        return $this->assetRepo->getUrl( 'PayU_EasyPlus::images/ucount.png');
     }
 }

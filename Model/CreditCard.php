@@ -13,19 +13,16 @@ namespace PayU\EasyPlus\Model;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Model\InfoInterface;
-use Magento\Sales\Api\Data\OrderPaymentInterface;
-use Magento\Sales\Model\Order\Payment\Transaction;
-use Magento\Quote\Model\Quote;
 
 /**
- * Redirect payment method model for Discovery Miles
+ * Payment model for payment method CreditCard
  *
  * @SuppressWarnings(PHPMD.TooManyFields)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class DiscoveryMilesRedirectPayment extends AbstractRedirectPayment
+class CreditCard extends AbstractPayment
 {
-    const CODE = 'payumea_discoverymiles';
+    const CODE = 'payumea_creditcard';
 
     /**
      * Payment code
@@ -49,7 +46,7 @@ class DiscoveryMilesRedirectPayment extends AbstractRedirectPayment
             return $this->_setupTransaction($payment, $amount);
         }
 
-        $payment->setSkipOrderProcessing(false);
+        $payment->setSkipOrderProcessing(true);
 
         return $this;
     }

@@ -29,7 +29,7 @@ function (
 
         return Component.extend({
             defaults: {
-                template: 'PayU_EasyPlus/payment/discoverymiles'
+                template: 'PayU_EasyPlus/payment/ebucks'
             },
 
             getCode: function() {
@@ -73,7 +73,7 @@ function (
 
             /** Returns payment image path */
             getPaymentMethodImageSrc: function() {
-                return window.checkoutConfig.payment.discoveryMiles.imageSrc;
+                return window.checkoutConfig.payment.ebucks.imageSrc;
             }
         });
     }

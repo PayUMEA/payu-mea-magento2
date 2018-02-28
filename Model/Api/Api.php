@@ -11,7 +11,7 @@
 
 namespace PayU\EasyPlus\Model\Api;
 
-use PayU\EasyPlus\Model\AbstractRedirectPayment;
+use PayU\EasyPlus\Model\AbstractPayment;
 use Psr\Log\LoggerInterface;
 use PayU\EasyPlus\Model\Response\Factory;
 use Magento\Payment\Model\InfoInterface;
@@ -255,21 +255,21 @@ class Api extends \Magento\Framework\DataObject
 
     /**
      * @param $txn_id
-     * @param AbstractRedirectPayment $redirectPayment
+     * @param AbstractPayment $redirectPayment
      * @return \PayU\EasyPlus\Model\Response
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function doGetTransaction($txn_id, AbstractRedirectPayment $redirectPayment)
+    public function doGetTransaction($txn_id, AbstractPayment $redirectPayment)
     {
         $reference = isset($txn_id['PayUReference']) ? $txn_id['PayUReference'] : $txn_id;
-        $this->setMethodCode($redirectPayment ->getCode());
+        $this->setMethodCode($redirectPayment->getCode());
         $soapClient = $this->getSoapSingleton();
 
         $data['Api'] = $this->getApiVersion();
         $data['Safekey'] = $redirectPayment->getValue('safe_key');
         $data['AdditionalInformation']['payUReference'] = $reference;;
 
-        //$this->_logger->debug(print_r($this->debug(['data' => $data]), true));
+        $redirectPayment->debugData(['request' => $data]);
 
         $result = $soapClient->getTransaction($data);
 
@@ -308,13 +308,13 @@ class Api extends \Magento\Framework\DataObject
     }
 
     /**
-     * @param AbstractRedirectPayment $redirectPayment
+     * @param AbstractPayment $redirectPayment
      * @param InfoInterface $payment
      * @param $transactionId
      * @return \PayU\EasyPlus\Model\Response
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function fetchTransactionInfo(AbstractRedirectPayment $redirectPayment, InfoInterface $payment, $transactionId)
+    public function fetchTransactionInfo(AbstractPayment $redirectPayment, InfoInterface $payment, $transactionId)
     {
         $response = $this->doGetTransaction($transactionId, $redirectPayment);
 

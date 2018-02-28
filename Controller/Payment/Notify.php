@@ -11,66 +11,38 @@
 
 namespace PayU\EasyPlus\Controller\Payment;
 
+use PayU\Model\XmlHelper;
 use PayU\EasyPlus\Controller\AbstractAction;
-use Magento\Framework\Controller\ResultFactory;
 
 class Notify extends AbstractAction
 {
     /**
-     * Config provider class
-     *
-     * @var string
-     */
-    protected $_configType = 'PayU\EasyPlus\Model\GenericConfigProvider';
-
-    /**
-     * Config method code
-     *
-     * @var string
-     */
-    protected $_configMethod = \PayU\EasyPlus\Model\GenericConfigProvider::CODE;
-
-    /**
-     * Cancel Express Checkout
-     *
-     * @return \Magento\Framework\Controller\Result\Redirect
+     * Process Instant Payment Notification (IPN) from PayU
      */
     public function execute()
     {
-        /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $postData = file_get_contents("php://input");
+        $sxe = simplexml_load_string($postData);
 
-        try {
-            $payu = $this->_initPayUReference();
-          
-            // if there is an order - cancel it
-            $orderId = $this->_getCheckoutSession()->getLastOrderId();
-
-            /** @var \Magento\Sales\Model\Order $order */
-            $order = $orderId ? $this->_orderFactory->create()->load($orderId) : false;
-            if ($payu && $order
-                && $order->getQuoteId() == $this->_getCheckoutSession()->getLastSuccessQuoteId())
-            {
-                $this->response->setData('params', $payu);
-
-                $this->response->processCancel($order);
-
-                $this->messageManager->addErrorMessage(
-                    __('Payment transaction unsuccessful. User canceled payment transaction.')
-                );
-            } else {
-                $this->messageManager->addErrorMessage(
-                    __('Payment unsuccessful. Failed to reload cart.')
-                );
-            }
-        } catch (\Magento\Framework\Exception\LocalizedException $e) {
-            $this->messageManager->addExceptionMessage($e, $e->getMessage());
-        } catch (\Exception $e) {
-            $this->messageManager->addExceptionMessage($e, __('Unable to cancel Checkout'));
+        if(empty($sxe)) {
+            http_response_code('500');
         }
 
-        $this->_returnCustomerQuote(true);
+        $ipnData = XMLHelper::parseXMLToArray($sxe);
 
-        return $resultRedirect->setPath('checkout/cart');
+        if($ipnData) {
+            // if there is an order - cancel it
+            $incrementId = $ipnData['MerchantReference'];
+            /** @var \Magento\Sales\Model\Order $order */
+            $order = $incrementId ? $this->_orderFactory->create()->loadByIncrementId($incrementId) : false;
+            if ($order) {
+                $this->response->processNotify($ipnData, $order);
+                http_response_code('200');
+            } else {
+                http_response_code('500');
+            }
+        } else {
+            http_response_code('500');
+        }
     }
 }

@@ -15,6 +15,9 @@
         "OSL-3.0",
         "AFL-3.0"
     ],
+    "require": {
+        "payu-mea/payu-mea-sdk-php": "^1.0"
+    },
     "authors": [
         {
             "name": "Kenneth Onah",

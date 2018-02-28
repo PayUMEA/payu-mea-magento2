@@ -7,8 +7,13 @@ namespace PayU\EasyPlus\Controller;
 
 use Magento\Checkout\Controller\Express\RedirectLoginInterface;
 use Magento\Framework\App\Action\Action as AppAction;
-use PayU\EasyPlus\Model\GenericConfigProvider;
-use PayU\EasyPlus\Model\DiscoveryMilesRedirectPayment;
+use Magento\Framework\Exception\LocalizedException;
+use PayU\EasyPlus\Model\CreditCardConfig;
+use PayU\EasyPlus\Model\DiscoveryMilesConfig;
+use PayU\EasyPlus\Model\EbucksConfig;
+use PayU\EasyPlus\Model\EFTProConfig;
+use PayU\EasyPlus\Model\MobicredConfig;
+use PayU\EasyPlus\Model\UcountConfig;
 
 /**
  * Abstract Checkout Controller
@@ -17,8 +22,12 @@ use PayU\EasyPlus\Model\DiscoveryMilesRedirectPayment;
 abstract class AbstractAction extends AppAction implements RedirectLoginInterface
 {
     protected $configTypes = [
-        GenericConfigProvider::CODE => 'PayU\EasyPlus\Model\GenericConfigProvider',
-        DiscoveryMilesRedirectPayment::CODE => 'PayU\EasyPlus\Model\DiscoveryMilesConfigProvider'
+        CreditCardConfig::CODE => 'PayU\EasyPlus\Model\CreditCardConfig',
+        EbucksConfig::CODE => 'PayU\EasyPlus\Model\EbucksConfig',
+        EFTProConfig::CODE => 'PayU\EasyPlus\Model\EFTProConfig',
+        DiscoveryMilesConfig::CODE => 'PayU\EasyPlus\Model\DiscoveryMilesConfig',
+        MobicredConfig::CODE => 'PayU\EasyPlus\Model\MobicredConfig',
+        UcountConfig::CODE => 'PayU\EasyPlus\Model\UcountConfig'
     ];
 
     /**
@@ -27,7 +36,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
     protected $_checkout;
 
     /**
-     * @var \PayU\EasyPlus\Model\GenericConfigProvider
+     * @var \PayU\EasyPlus\Model\CreditCardConfig
      */
     protected $_config;
 
@@ -303,16 +312,18 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
                     $quote->setIsActive(true)->setReservedOrderId(null);
                     $quoteRepository->save($quote);
                     $this->_getCheckoutSession()->replaceQuote($quote);
+
+                    $this->_getSession()->unsCheckoutOrderIncrementId($incrementId);
+                    $this->_getSession()->unsetData('quote_id');
+
+                    $this->clearSessionData();
+
+                    if ($cancelOrder) {
+                        $order->registerCancellation($errorMsg)->save();
+                    }
                 } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
-                }
-
-                $this->_getSession()->unsCheckoutOrderIncrementId($incrementId);
-                $this->_getSession()->unsetData('quote_id');
-
-                $this->clearSessionData();
-
-                if ($cancelOrder) {
-                    $order->registerCancellation($errorMsg)->save();
+                } catch (LocalizedException $localizedException){
+                } catch (\Exception $exception) {
                 }
             }
         }

@@ -11,6 +11,7 @@
 
 namespace PayU\EasyPlus\Model;
 
+use Magento\Sales\Model\Order;
 use PayU\EasyPlus\Model\Error\Code;
 use PayU\EasyPlus\Model\Api\Factory;
 use Magento\Framework\DataObject;
@@ -43,7 +44,7 @@ class Response extends DataObject
     public function isPaymentSuccessful()
     {
         return $this->getReturn()->successful
-            && $this->getTransactionState() == PayU::TRANS_STATE_SUCCESSFUL;
+            && $this->getTransactionState() == AbstractPayU::TRANS_STATE_SUCCESSFUL;
     }
 
     public function getTranxId()
@@ -107,11 +108,16 @@ class Response extends DataObject
         return $this->getReturn()->transactionType;
     }
 
+    public function getPointOfFailure()
+    {
+        return $this->getReturn()->pointOfFailure;
+    }
+
     /**
      * Process return from PayU after payment
      *
-     * @param $order
-     * @return bool
+     * @param Order $order
+     * @return bool|string
      */
 	public function processReturn($order)
 	{
@@ -134,11 +140,23 @@ class Response extends DataObject
     /**
      * Process user payment cancellation
      *
-     * @param $order
+     * @param Order $order
      */
     public function processCancel($order)
     {
         $payment = $order->getPayment();
         $payment->getMethodInstance()->processCancellation($this->getParams());
+    }
+
+    /**
+     * Process Instant Payment Notification
+     *
+     * @param array $data
+     * @param Order $order
+     */
+    public function processNotify($data, $order)
+    {
+        $payment = $order->getPayment();
+        $payment->getMethodInstance()->processNotification($data, $order);
     }
 }
