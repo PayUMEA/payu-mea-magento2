@@ -9,7 +9,11 @@ use Magento\Checkout\Controller\Express\RedirectLoginInterface;
 use Magento\Framework\App\Action\Action as AppAction;
 use Magento\Framework\Exception\LocalizedException;
 use PayU\EasyPlus\Model\CreditCardConfig;
-use PayU\EasyPlus\Model\DiscoveryMiles;
+use PayU\EasyPlus\Model\DiscoveryMilesConfig;
+use PayU\EasyPlus\Model\EbucksConfig;
+use PayU\EasyPlus\Model\EFTProConfig;
+use PayU\EasyPlus\Model\MobicredConfig;
+use PayU\EasyPlus\Model\UcountConfig;
 
 /**
  * Abstract Checkout Controller
@@ -19,7 +23,11 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
 {
     protected $configTypes = [
         CreditCardConfig::CODE => 'PayU\EasyPlus\Model\CreditCardConfig',
-        DiscoveryMiles::CODE => 'PayU\EasyPlus\Model\DiscoveryMilesConfig'
+        EbucksConfig::CODE => 'PayU\EasyPlus\Model\EbucksConfig',
+        EFTProConfig::CODE => 'PayU\EasyPlus\Model\EFTProConfig',
+        DiscoveryMilesConfig::CODE => 'PayU\EasyPlus\Model\DiscoveryMilesConfig',
+        MobicredConfig::CODE => 'PayU\EasyPlus\Model\MobicredConfig',
+        UcountConfig::CODE => 'PayU\EasyPlus\Model\UcountConfig'
     ];
 
     /**
