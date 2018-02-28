@@ -10,7 +10,7 @@ namespace PayU\EasyPlus\Model;
 
 use Magento\Payment\Model\Method\AbstractMethod;
 
-class PayU extends AbstractMethod
+class AbstractPayU extends AbstractMethod
 {
     const REQUEST_TYPE_PAYMENT = 'PAYMENT';
 
@@ -23,7 +23,6 @@ class PayU extends AbstractMethod
     const REQUEST_TYPE_FINALIZE = 'FINALIZE';
 
     const TRANS_STATE_NEW = 'PAYMENT';
-
 
     const TRANS_STATE_PROCESSING = 'PROCESSING';
 

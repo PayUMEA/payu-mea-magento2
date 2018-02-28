@@ -13,23 +13,10 @@ namespace PayU\EasyPlus\Controller\Payment;
 
 use PayU\EasyPlus\Controller\AbstractAction;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Exception\LocalizedException;
 
 class Cancel extends AbstractAction
 {
-    /**
-     * Config mode type
-     *
-     * @var string
-     */
-    protected $_configType = 'PayU\EasyPlus\Model\ConfigProvider';
-
-    /**
-     * Config method type
-     *
-     * @var string
-     */
-    protected $_configMethod = \PayU\EasyPlus\Model\ConfigProvider::CODE;
-
     /**
      * Cancel Express Checkout
      *
@@ -63,7 +50,7 @@ class Cancel extends AbstractAction
                     __('Payment unsuccessful. Failed to reload cart.')
                 );
             }
-        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+        } catch (LocalizedException $e) {
             $this->messageManager->addExceptionMessage($e, $e->getMessage());
         } catch (\Exception $e) {
             $this->messageManager->addExceptionMessage($e, __('Unable to cancel Checkout'));

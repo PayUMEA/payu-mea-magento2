@@ -11,14 +11,23 @@
 
 namespace PayU\EasyPlus\Model;
 
-class Response extends \Magento\Framework\DataObject
+use Magento\Sales\Model\Order;
+use PayU\EasyPlus\Model\Error\Code;
+use PayU\EasyPlus\Model\Api\Factory;
+use Magento\Framework\DataObject;
+/**
+ * Class Response
+ *
+ * @package PayU\EasyPlus\Model
+ */
+class Response extends DataObject
 {
 	protected $errorCode;
 	protected $api;
 
 	public function __construct(
-        \PayU\EasyPlus\Model\Error\Code $errorCodes,
-        \PayU\EasyPlus\Model\Api\Factory $apiFactory,
+        Code $errorCodes,
+        Factory $apiFactory,
         array $data = array()
 	) {
 		$this->errorCode = $errorCodes;
@@ -35,7 +44,7 @@ class Response extends \Magento\Framework\DataObject
     public function isPaymentSuccessful()
     {
         return $this->getReturn()->successful
-            && $this->getTransactionState() == PayU::TRANS_STATE_SUCCESSFUL;
+            && $this->getTransactionState() == AbstractPayU::TRANS_STATE_SUCCESSFUL;
     }
 
     public function getTranxId()
@@ -99,14 +108,25 @@ class Response extends \Magento\Framework\DataObject
         return $this->getReturn()->transactionType;
     }
 
+    public function getPointOfFailure()
+    {
+        return $this->getReturn()->pointOfFailure;
+    }
+
+    /**
+     * Process return from PayU after payment
+     *
+     * @param Order $order
+     * @return bool|string
+     */
 	public function processReturn($order)
 	{
-		$response = $this->api->doGetTransaction($this->getParams());
 		$payment = $order->getPayment();
+        $payment->getMethodInstance()->process($this->getParams());
+        $response = $payment->getMethodInstance()->getResponse();
 
-		if($response && $response->isPaymentSuccessful()) {
+		if($response->isPaymentSuccessful()) {
 		    $this->api->importPaymentInfo($response, $payment);
-			$payment->getMethodInstance()->process($response->getReturn());
 
 			return true;
 		} else {
@@ -117,10 +137,26 @@ class Response extends \Magento\Framework\DataObject
 		}
 	}
 
+    /**
+     * Process user payment cancellation
+     *
+     * @param Order $order
+     */
     public function processCancel($order)
     {
-        $response = $this->api->doGetTransaction($this->getParams());
         $payment = $order->getPayment();
-        $payment->getMethodInstance()->processCancellation($response->getReturn());
+        $payment->getMethodInstance()->processCancellation($this->getParams());
+    }
+
+    /**
+     * Process Instant Payment Notification
+     *
+     * @param array $data
+     * @param Order $order
+     */
+    public function processNotify($data, $order)
+    {
+        $payment = $order->getPayment();
+        $payment->getMethodInstance()->processNotification($data, $order);
     }
 }

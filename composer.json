@@ -9,12 +9,15 @@
         "payu magento 2"
     ],
     "type": "magento2-module",
-    "version": "0.0.5",
+    "version": "1.0.1",
     "homepage": "https://payu.co.za/",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
     ],
+    "require": {
+        "payu-mea/payu-mea-sdk-php": "^1.0"
+    },
     "authors": [
         {
             "name": "Kenneth Onah",

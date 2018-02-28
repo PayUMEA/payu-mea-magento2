@@ -8,7 +8,22 @@
 <payment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="../../../Magento/Payment/etc/payment.xsd">
     <methods>
-        <method name="redirectpaymentmethod">
+        <method name="payumea_creditcard">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+        <method name="payumea_ebucks">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+        <method name="payumea_eftpro">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+        <method name="payumea_discoverymiles">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+        <method name="payumea_mobicred">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+        <method name="payumea_ucount">
             <allow_multiple_address>1</allow_multiple_address>
         </method>
     </methods>
