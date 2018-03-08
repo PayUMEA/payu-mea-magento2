@@ -31,7 +31,7 @@ use Magento\Sales\Api\Data\TransactionInterface;
  */
 class AbstractPayment extends AbstractPayU
 {
-    const CODE = null;
+    const CODE = '';
     /**
      * Availability option
      *
@@ -90,6 +90,7 @@ class AbstractPayment extends AbstractPayU
     protected $_maxAmount                   = null;
     protected $_redirectUrl                 = '';
     protected $_supportedCurrencyCodes      = array('ZAR', 'NGN');
+
     /**
      * Fields that should be replaced in debug with '***'
      *
@@ -108,7 +109,6 @@ class AbstractPayment extends AbstractPayU
      */
     protected $transactionRepository;
 
-    protected $orderFactory;
     protected $quoteRepository;
     protected $orderSender;
     protected $invoiceSender;
@@ -153,7 +153,6 @@ class AbstractPayment extends AbstractPayU
         \PayU\EasyPlus\Helper\DataFactory $dataFactory,
         \PayU\EasyPlus\Model\Request\Factory $requestFactory,
         \PayU\EasyPlus\Model\Response\Factory $responseFactory,
-        \Magento\Sales\Model\OrderFactory $orderFactory,
         \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
@@ -187,7 +186,6 @@ class AbstractPayment extends AbstractPayU
         $this->_easyPlusApi = $apiFactory->create();
         $this->_session = $session;
         $this->_paymentData = $paymentData;
-        $this->orderFactory = $orderFactory;
         $this->quoteRepository = $quoteRepository;
         $this->orderSender = $orderSender;
         $this->invoiceSender = $invoiceSender;
@@ -563,6 +561,8 @@ class AbstractPayment extends AbstractPayU
                 }
 
                 $order->save();
+                $this->clearSessionData();
+
                 $this->debugData(['info' => 'PayU IPN Processing complete.', 'response' => $data]);
             } else {
 
@@ -688,6 +688,17 @@ class AbstractPayment extends AbstractPayU
             throw new LocalizedException($message);
         }
 
+        $this->invoiceAndNotifyCustomer($order);
+    }
+
+    /**
+     * Generate invoice and notify customer
+     *
+     * @param Order $order
+     * @throws LocalizedException
+     */
+    protected function invoiceAndNotifyCustomer(Order $order)
+    {
         try {
             $order->setCanSendNewEmailFlag(true);
             $this->orderSender->send($order);
@@ -708,8 +719,8 @@ class AbstractPayment extends AbstractPayU
                 $order->addStatusHistoryComment(
                     __('Notified customer about invoice #%1.', $invoice->getId())
                 )
-                ->setIsCustomerNotified(true)
-                ->save();
+                    ->setIsCustomerNotified(true)
+                    ->save();
                 $order->setState("processing")->setStatus("processing");
                 $order->save();
             }
@@ -921,6 +932,16 @@ class AbstractPayment extends AbstractPayU
             );
             $payment->getOrder()->addStatusHistoryComment($message);
         }
+    }
+
+    /**
+     * Clear setup transaction data stored in session
+     */
+    protected function clearSessionData()
+    {
+        $this->_session->unsetCheckoutReference();
+        $this->_session->unsetCheckoutOrderIncrementId();
+        $this->_session->unsetCheckoutRedirectUrl();
     }
 
     /**

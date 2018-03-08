@@ -36,7 +36,7 @@ class Request extends DataObject
             ->setData('TransactionType', 'PAYMENT')
             ->setData('AdditionalInformation', array(
                 'merchantReference'         => $order->getIncrementId(),
-                'notificationUrl'           => $helper->getNotificationUrl($paymentMethod->getCode()),
+                'notificationUrl'           => 'https://638d0882.ngrok.io/clean-m2/payu_easyplus/payment/notify',//$helper->getNotificationUrl($paymentMethod->getCode()),
                 'cancelUrl'                 => $helper->getCancelUrl($paymentMethod->getCode()),
                 'returnUrl'                 => $helper->getReturnUrl($paymentMethod->getCode()),
                 'supportedPaymentMethods'   => $paymentMethod->getConfigData('payment_methods'),
