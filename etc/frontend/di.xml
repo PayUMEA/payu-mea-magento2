@@ -16,13 +16,6 @@
             <argument name="storage" xsi:type="object">PayU\EasyPlus\Model\Session\Storage</argument>
         </arguments>
     </virtualType>
-	<!--<virtualType name="PayU\EasyPlus\Model\ConfigProvider" type="Magento\Payment\Model\CcGenericConfigProvider">
-        <arguments>
-            <argument name="methodCodes" xsi:type="array">
-                <item name="payu_redirectpayment" xsi:type="const">PayU\EasyPlus\Model\RedirectPayment::CODE</item>
-            </argument>
-        </arguments>
-    </virtualType>-->
     <type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>
             <argument name="configProviders" xsi:type="array">

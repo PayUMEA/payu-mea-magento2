@@ -31,7 +31,6 @@ class Notify extends AbstractAction
         $ipnData = XMLHelper::parseXMLToArray($sxe);
 
         if($ipnData) {
-            // if there is an order - cancel it
             $incrementId = $ipnData['MerchantReference'];
             /** @var \Magento\Sales\Model\Order $order */
             $order = $incrementId ? $this->_orderFactory->create()->loadByIncrementId($incrementId) : false;
