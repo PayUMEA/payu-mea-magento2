@@ -109,6 +109,7 @@ class AbstractPayment extends AbstractPayU
      */
     protected $transactionRepository;
 
+    protected $orderFactory;
     protected $quoteRepository;
     protected $orderSender;
     protected $invoiceSender;
@@ -153,6 +154,7 @@ class AbstractPayment extends AbstractPayU
         \PayU\EasyPlus\Helper\DataFactory $dataFactory,
         \PayU\EasyPlus\Model\Request\Factory $requestFactory,
         \PayU\EasyPlus\Model\Response\Factory $responseFactory,
+        \Magento\Sales\Model\OrderFactory $orderFactory,
         \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
@@ -186,6 +188,7 @@ class AbstractPayment extends AbstractPayU
         $this->_easyPlusApi = $apiFactory->create();
         $this->_session = $session;
         $this->_paymentData = $paymentData;
+        $this->orderFactory = $orderFactory;
         $this->quoteRepository = $quoteRepository;
         $this->orderSender = $orderSender;
         $this->invoiceSender = $invoiceSender;
@@ -389,13 +392,13 @@ class AbstractPayment extends AbstractPayU
             if($response->return->successful) {
                 $payUReference = $response->return->payUReference;
 
+                // set PayU session variables
                 $this->_session->setCheckoutReference($payUReference);
                 $this->_session->setCheckoutOrderIncrementId($order->getIncrementId());
-
                 $this->_easyPlusApi->setPayUReference($payUReference);
                 $this->_session->setCheckoutRedirectUrl($this->_easyPlusApi->getRedirectUrl());
 
-                // set session variables
+                // set checkout session variables
                 $this->_checkoutSession->setLastQuoteId($order->getQuoteId())
                     ->setLastSuccessQuoteId($order->getQuoteId());
                 $this->_checkoutSession->setLastOrderId($order->getId())
@@ -504,7 +507,7 @@ class AbstractPayment extends AbstractPayU
         $response = $this->_easyPlusApi->doGetTransaction($payuReference, $this);
         $resultCode = $response->getResultCode();
 
-        $transactionNotes = "<strong>-----PAYU IPN RECEIVED---</strong><br />";
+        $transactionNotes = "<strong>-----PAYU NOTIFICATION RECEIVED---</strong><br />";
         //Checking the response from the SOAP call to see if IPN is valid
         if(isset($resultCode) && (!in_array($resultCode, array('POO5', 'EFTPRO_003', '999', '305')))) {
 
@@ -545,7 +548,8 @@ class AbstractPayment extends AbstractPayU
                 switch ($data['TransactionState']) {
                     // Payment completed
                     case 'SUCCESSFUL':
-                        $order->addStatusHistoryComment($transactionNotes, 'processing');
+                        $order->addStatusHistoryComment($transactionNotes, true);
+                        $this->invoiceAndNotifyCustomer($order);
                         break;
                     case 'FAILED':
                     case 'TIMEOUT':
@@ -561,7 +565,6 @@ class AbstractPayment extends AbstractPayU
                 }
 
                 $order->save();
-                $this->clearSessionData();
 
                 $this->debugData(['info' => 'PayU IPN Processing complete.', 'response' => $data]);
             } else {
@@ -702,8 +705,7 @@ class AbstractPayment extends AbstractPayU
         try {
             $order->setCanSendNewEmailFlag(true);
             $this->orderSender->send($order);
-            //$payment->place();
-
+            $this->debugData(['info' => $order->canInvoice()]);
             if($order->canInvoice()) {
                 $invoice = $this->_invoiceService->prepareInvoice($order);
                 $invoice->register();
@@ -932,16 +934,6 @@ class AbstractPayment extends AbstractPayU
             );
             $payment->getOrder()->addStatusHistoryComment($message);
         }
-    }
-
-    /**
-     * Clear setup transaction data stored in session
-     */
-    protected function clearSessionData()
-    {
-        $this->_session->unsetCheckoutReference();
-        $this->_session->unsetCheckoutOrderIncrementId();
-        $this->_session->unsetCheckoutRedirectUrl();
     }
 
     /**

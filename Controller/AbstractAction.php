@@ -186,7 +186,9 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
             }
             return $this;
         }
-        $reference = $this->getRequest()->getParam('PayUReference') ?: $this->getRequest()->getParam('payUReference');
+        $reference = $this->getRequest()->getParam('PayUReference') ?: 
+            $this->getRequest()->getParam('payUReference');
+            
         if ($reference) {
             if ($reference !== $this->_getSession()->getCheckoutReference()) {
                 throw new \Magento\Framework\Exception\LocalizedException(
@@ -200,7 +202,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
     }
 
     /**
-     * PayPal session instance getter
+     * PayU session instance getter
      *
      * @return \Magento\Framework\Session\Generic
      */
@@ -287,6 +289,26 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
         $this->_getSession()->unsCheckoutReference();
         $this->_getSession()->unsCheckoutRedirectUrl();
         $this->_getSession()->unsCheckoutOrderIncrementId();
+    }
+
+    protected function sendSuccessPage(\Magento\Sales\Model\Order $order)
+    {
+        $this->_getCheckoutSession()
+            ->setLastQuoteId($order->getQuoteId())
+            ->setLastSuccessQuoteId($order->getQuoteId());
+
+        $this->_getCheckoutSession()
+            ->setLastOrderId($order->getId())
+            ->setLastRealOrderId($order->getIncrementId())
+            ->setLastOrderStatus($order->getStatus());
+
+        $this->messageManager->addSuccessMessage(
+            __('Payment was successful and we received your order with much fanfare')
+        );
+
+        $this->clearSessionData();
+
+        return $this->_redirect('checkout/onepage/success');
     }
 
     /**

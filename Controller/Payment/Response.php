@@ -35,33 +35,20 @@ class Response extends AbstractAction
             $orderId = $this->_getCheckoutSession()->getLastOrderId();
             /** @var \Magento\Sales\Model\Order $order */
             $order = $orderId ? $this->_orderFactory->create()->load($orderId) : false;
-            // TODO timeout
+
+            if($order->getState() == \Magento\Sales\Model\Order::STATE_PROCESSING) {
+                return $this->sendSuccessPage($order);
+            }
+
             if($payu && $order) {
                 $this->response->setData('params', $payu);
 
                 $result = $this->response->processReturn($order);
 
                 if($result !== true) {
-                    $this->messageManager->addErrorMessage(
-                        __($result)
-                    );
+                    $this->messageManager->addErrorMessage(__($result));
                 } else {
-
-                    $this->_checkoutSession
-                        ->setLastQuoteId($order->getQuoteId())
-                        ->setLastSuccessQuoteId($order->getQuoteId());
-
-                    $this->_checkoutSession->setLastOrderId($order->getId())
-                        ->setLastRealOrderId($order->getIncrementId())
-                        ->setLastOrderStatus($order->getStatus());
-
-                    $this->messageManager->addSuccessMessage(
-                        __('Payment was successful and we received your order with much fanfare')
-                    );
-
-                    $this->clearSessionData();
-
-                    return $this->_redirect('checkout/onepage/success');
+                    return $this->sendSuccessPage($order);
                 }
             } 
         } catch (LocalizedException $e) {
