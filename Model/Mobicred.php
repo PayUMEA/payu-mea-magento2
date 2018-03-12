@@ -41,8 +41,8 @@ class Mobicred extends AbstractPayment
      */
     public function order(InfoInterface $payment, $amount)
     {
-        $payUReference = $this->_session->getCheckoutReference();
-        if (!$payUReference) {
+        $payURedirect = $this->_session->getCheckoutRedirectUrl();
+        if (!$payURedirect) {
             return $this->_setupTransaction($payment, $amount);
         }
 

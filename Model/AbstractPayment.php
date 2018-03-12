@@ -31,7 +31,7 @@ use Magento\Sales\Api\Data\TransactionInterface;
  */
 class AbstractPayment extends AbstractPayU
 {
-    const CODE = null;
+    const CODE = '';
     /**
      * Availability option
      *
@@ -90,6 +90,7 @@ class AbstractPayment extends AbstractPayU
     protected $_maxAmount                   = null;
     protected $_redirectUrl                 = '';
     protected $_supportedCurrencyCodes      = array('ZAR', 'NGN');
+
     /**
      * Fields that should be replaced in debug with '***'
      *
@@ -391,13 +392,13 @@ class AbstractPayment extends AbstractPayU
             if($response->return->successful) {
                 $payUReference = $response->return->payUReference;
 
+                // set PayU session variables
                 $this->_session->setCheckoutReference($payUReference);
                 $this->_session->setCheckoutOrderIncrementId($order->getIncrementId());
-
                 $this->_easyPlusApi->setPayUReference($payUReference);
                 $this->_session->setCheckoutRedirectUrl($this->_easyPlusApi->getRedirectUrl());
 
-                // set session variables
+                // set checkout session variables
                 $this->_checkoutSession->setLastQuoteId($order->getQuoteId())
                     ->setLastSuccessQuoteId($order->getQuoteId());
                 $this->_checkoutSession->setLastOrderId($order->getId())
@@ -506,7 +507,7 @@ class AbstractPayment extends AbstractPayU
         $response = $this->_easyPlusApi->doGetTransaction($payuReference, $this);
         $resultCode = $response->getResultCode();
 
-        $transactionNotes = "<strong>-----PAYU IPN RECEIVED---</strong><br />";
+        $transactionNotes = "<strong>-----PAYU NOTIFICATION RECEIVED---</strong><br />";
         //Checking the response from the SOAP call to see if IPN is valid
         if(isset($resultCode) && (!in_array($resultCode, array('POO5', 'EFTPRO_003', '999', '305')))) {
 
@@ -547,7 +548,8 @@ class AbstractPayment extends AbstractPayU
                 switch ($data['TransactionState']) {
                     // Payment completed
                     case 'SUCCESSFUL':
-                        $order->addStatusHistoryComment($transactionNotes, 'processing');
+                        $order->addStatusHistoryComment($transactionNotes, true);
+                        $this->invoiceAndNotifyCustomer($order);
                         break;
                     case 'FAILED':
                     case 'TIMEOUT':
@@ -563,6 +565,7 @@ class AbstractPayment extends AbstractPayU
                 }
 
                 $order->save();
+
                 $this->debugData(['info' => 'PayU IPN Processing complete.', 'response' => $data]);
             } else {
 
@@ -688,11 +691,21 @@ class AbstractPayment extends AbstractPayU
             throw new LocalizedException($message);
         }
 
+        $this->invoiceAndNotifyCustomer($order);
+    }
+
+    /**
+     * Generate invoice and notify customer
+     *
+     * @param Order $order
+     * @throws LocalizedException
+     */
+    protected function invoiceAndNotifyCustomer(Order $order)
+    {
         try {
             $order->setCanSendNewEmailFlag(true);
             $this->orderSender->send($order);
-            //$payment->place();
-
+            $this->debugData(['info' => $order->canInvoice()]);
             if($order->canInvoice()) {
                 $invoice = $this->_invoiceService->prepareInvoice($order);
                 $invoice->register();
@@ -708,8 +721,8 @@ class AbstractPayment extends AbstractPayU
                 $order->addStatusHistoryComment(
                     __('Notified customer about invoice #%1.', $invoice->getId())
                 )
-                ->setIsCustomerNotified(true)
-                ->save();
+                    ->setIsCustomerNotified(true)
+                    ->save();
                 $order->setState("processing")->setStatus("processing");
                 $order->save();
             }
