@@ -548,7 +548,7 @@ class AbstractPayment extends AbstractPayU
                 switch ($data['TransactionState']) {
                     // Payment completed
                     case 'SUCCESSFUL':
-                        $order->addStatusHistoryComment($transactionNotes, true);
+                        $order->addStatusHistoryComment($transactionNotes, 'processing');
                         $this->invoiceAndNotifyCustomer($order);
                         break;
                     case 'FAILED':
