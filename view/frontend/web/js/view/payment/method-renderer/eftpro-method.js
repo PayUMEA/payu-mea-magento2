@@ -29,6 +29,7 @@ function (
 
         return Component.extend({
             defaults: {
+                redirectAfterPlaceOrder: false,
                 template: 'PayU_EasyPlus/payment/eftpro'
             },
 
@@ -68,7 +69,7 @@ function (
             },
 
             afterPlaceOrder: function () {
-                window.location.replace(url.build('payu_easyplus/payment/redirect'));
+                $.mage.redirect(url.build('payu_easyplus/payment/redirect'));
             },
 
             /** Returns payment image path */
