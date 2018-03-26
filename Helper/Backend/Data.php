@@ -15,7 +15,7 @@ use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Backend\Model\UrlInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+
 /**
  * PayU EasyPlus Backend Data Helper
  */
@@ -26,16 +26,14 @@ class Data extends FrontendDataHelper
      * @param StoreManagerInterface $storeManager
      * @param OrderFactory $orderFactory
      * @param UrlInterface $backendUrl
-     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
         OrderFactory $orderFactory,
-        UrlInterface $backendUrl,
-        ScopeConfigInterface $scopeConfig
+        UrlInterface $backendUrl
     ) {
-        parent::__construct($context, $storeManager, $orderFactory, $scopeConfig);
+        parent::__construct($context, $storeManager, $orderFactory);
         $this->_urlBuilder = $backendUrl;
     }
 

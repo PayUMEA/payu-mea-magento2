@@ -17,7 +17,6 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Authorizenet\Model\Authorizenet;
 use Magento\Store\Model\ScopeInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\UrlInterface;
 
 /**
@@ -43,25 +42,17 @@ class Data extends AbstractHelper
     protected $allowedCurrencyCodes = ['NGN', 'ZAR'];
 
     /**
-     * @var ScopeConfigInterface
-     */
-    protected $scopeConfig;
-
-    /**
      * @param Context $context
      * @param StoreManagerInterface $storeManager
      * @param OrderFactory $orderFactory
-     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         Context $context,
         StoreManagerInterface $storeManager,
-        OrderFactory $orderFactory,
-        ScopeConfigInterface $scopeConfig
+        OrderFactory $orderFactory
     ) {
         $this->storeManager = $storeManager;
         $this->orderFactory = $orderFactory;
-        $this->scopeConfig = $scopeConfig;
 
         parent::__construct($context);
     }
