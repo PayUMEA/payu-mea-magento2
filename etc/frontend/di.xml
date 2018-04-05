@@ -19,9 +19,7 @@
     <type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>
             <argument name="configProviders" xsi:type="array">
-                <item name="payumea_config_provider" xsi:type="object">
-                    PayU\EasyPlus\Model\PayUConfigProvider
-                </item>
+                <item name="payumea_config_provider" xsi:type="object">PayU\EasyPlus\Model\PayUConfigProvider</item>
             </argument>
         </arguments>
     </type>
