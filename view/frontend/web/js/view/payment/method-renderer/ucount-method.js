@@ -74,7 +74,7 @@ function (
 
             /** Returns payment image path */
             getPaymentMethodImageSrc: function() {
-                return window.checkoutConfig.payment.ucount.imageSrc;
+                return window.checkoutConfig.payment.imageSrc.ucount;
             }
         });
     }

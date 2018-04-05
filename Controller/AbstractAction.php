@@ -8,12 +8,12 @@ namespace PayU\EasyPlus\Controller;
 use Magento\Checkout\Controller\Express\RedirectLoginInterface;
 use Magento\Framework\App\Action\Action as AppAction;
 use Magento\Framework\Exception\LocalizedException;
-use PayU\EasyPlus\Model\CreditCardConfig;
-use PayU\EasyPlus\Model\DiscoveryMilesConfig;
-use PayU\EasyPlus\Model\EbucksConfig;
-use PayU\EasyPlus\Model\EFTProConfig;
-use PayU\EasyPlus\Model\MobicredConfig;
-use PayU\EasyPlus\Model\UcountConfig;
+use PayU\EasyPlus\Model\CreditCard;
+use PayU\EasyPlus\Model\DiscoveryMiles;
+use PayU\EasyPlus\Model\Ebucks;
+use PayU\EasyPlus\Model\EFTPro;
+use PayU\EasyPlus\Model\Mobicred;
+use PayU\EasyPlus\Model\Ucount;
 
 /**
  * Abstract Checkout Controller
@@ -22,12 +22,12 @@ use PayU\EasyPlus\Model\UcountConfig;
 abstract class AbstractAction extends AppAction implements RedirectLoginInterface
 {
     protected $configTypes = [
-        CreditCardConfig::CODE => 'PayU\EasyPlus\Model\CreditCardConfig',
-        EbucksConfig::CODE => 'PayU\EasyPlus\Model\EbucksConfig',
-        EFTProConfig::CODE => 'PayU\EasyPlus\Model\EFTProConfig',
-        DiscoveryMilesConfig::CODE => 'PayU\EasyPlus\Model\DiscoveryMilesConfig',
-        MobicredConfig::CODE => 'PayU\EasyPlus\Model\MobicredConfig',
-        UcountConfig::CODE => 'PayU\EasyPlus\Model\UcountConfig'
+        CreditCard::CODE => 'PayU\EasyPlus\Model\PayUConfigProvider',
+        Ebucks::CODE => 'PayU\EasyPlus\Model\PayUConfigProvider',
+        EFTPro::CODE => 'PayU\EasyPlus\Model\PayUConfigProvider',
+        DiscoveryMiles::CODE => 'PayU\EasyPlus\Model\PayUConfigProvider',
+        Mobicred::CODE => 'PayU\EasyPlus\Model\PayUConfigProvider',
+        Ucount::CODE => 'PayU\EasyPlus\Model\PayUConfigProvider'
     ];
 
     /**
@@ -36,7 +36,7 @@ abstract class AbstractAction extends AppAction implements RedirectLoginInterfac
     protected $_checkout;
 
     /**
-     * @var \PayU\EasyPlus\Model\CreditCardConfig
+     * @var \PayU\EasyPlus\Model\PayUConfigProvider
      */
     protected $_config;
 
