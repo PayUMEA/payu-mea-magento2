@@ -10,7 +10,7 @@ namespace PayU\EasyPlus\Model;
 
 use Magento\Payment\Model\Method\AbstractMethod;
 
-class AbstractPayU extends AbstractMethod
+abstract class AbstractPayU extends AbstractMethod
 {
     const REQUEST_TYPE_PAYMENT = 'PAYMENT';
 

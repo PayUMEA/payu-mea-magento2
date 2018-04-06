@@ -29,7 +29,7 @@ use Magento\Sales\Api\Data\TransactionInterface;
  * @SuppressWarnings(PHPMD.TooManyFields)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class AbstractPayment extends AbstractPayU
+abstract class AbstractPayment extends AbstractPayU
 {
     const CODE = '';
     /**

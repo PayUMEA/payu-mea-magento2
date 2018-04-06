@@ -19,24 +19,7 @@
     <type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>
             <argument name="configProviders" xsi:type="array">
-                <item name="payumea_creditcard_config_provider" xsi:type="object">
-                    PayU\EasyPlus\Model\CreditCardConfig
-                </item>
-                <item name="payumea_ebucks_config_provider" xsi:type="object">
-                    PayU\EasyPlus\Model\EbucksConfig
-                </item>
-                <item name="payumea_eftpro_config_provider" xsi:type="object">
-                    PayU\EasyPlus\Model\EFTProConfig
-                </item>
-                <item name="payumea_discoverymiles_config_provider" xsi:type="object">
-                    PayU\EasyPlus\Model\DiscoveryMilesConfig
-                </item>
-                <item name="payumea_mobicred_config_provider" xsi:type="object">
-                    PayU\EasyPlus\Model\MobicredConfig
-                </item>
-                <item name="payumea_ucount_config_provider" xsi:type="object">
-                    PayU\EasyPlus\Model\UcountConfig
-                </item>
+                <item name="payumea_config_provider" xsi:type="object">PayU\EasyPlus\Model\PayUConfigProvider</item>
             </argument>
         </arguments>
     </type>
