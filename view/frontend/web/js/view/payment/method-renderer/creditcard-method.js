@@ -74,7 +74,7 @@ function (
 
             /** Returns payment image path */
             getPaymentMethodImageSrc: function() {
-                return window.checkoutConfig.payment.imageSrc.creditcard;
+                return window.checkoutConfig.payment.imageSrc.payumea_creditcard;
             }
         });
     }
