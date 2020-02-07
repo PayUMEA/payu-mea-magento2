@@ -21,9 +21,10 @@ The extension requires the following extension in order to work properly:
 
 After copyting the files you need to enable the extension by excuting the following command:
 ```bash
-bin/magento module:enable --clear-static-content PayU_EasyPlus
-bin/magento setup:upgrade
-bin/magento cache:clean
+php bin/magento module:enable PayU_EasyPlus
+php bin/magento setup:upgrade
+php bin/magento setup:di:compile
+php bin/magento setup:static-content:deploy
 ```
 
 ## Configuration
